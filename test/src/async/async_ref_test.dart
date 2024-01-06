@@ -2,7 +2,6 @@ import 'package:lite_ref/lite_ref.dart';
 import 'package:test/test.dart';
 
 import '../common.dart';
-import '../sync/sync_ref_test.dart';
 
 const k10ms = Duration(milliseconds: 10);
 

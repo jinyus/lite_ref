@@ -16,14 +16,16 @@ abstract class Ref {
   }
 
   /// Creates a new [AsyncSingletonRef] which always return the same instance.
-  static AsyncSingletonRef<T> asyncSingleton<T>(
-      {Future<T> Function()? create}) {
+  static AsyncSingletonRef<T> asyncSingleton<T>({
+    Future<T> Function()? create,
+  }) {
     return AsyncSingletonRef<T>(create: create);
   }
 
   /// Creates a new [AsyncTransientRef] which always return a new instance.
-  static AsyncTransientRef<T> asyncTransient<T>(
-      {Future<T> Function()? create}) {
+  static AsyncTransientRef<T> asyncTransient<T>({
+    Future<T> Function()? create,
+  }) {
     return AsyncTransientRef<T>(create: create);
   }
 

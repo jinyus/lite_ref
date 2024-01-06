@@ -19,10 +19,8 @@ class TransientRef<T> {
   }
 
   void _assertNotFrozen() {
-    if (_frozen || Ref.allFrozen) {
-      throw StateError(
-        'This Ref has been frozen and cannot be overridden.',
-      );
+    if (_frozen) {
+      throw StateError('This Ref has been frozen and cannot be overridden.');
     }
   }
 

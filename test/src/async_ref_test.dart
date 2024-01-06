@@ -3,6 +3,8 @@ import 'package:test/test.dart';
 
 import 'ref_test.dart';
 
+const k10ms = Duration(milliseconds: 10);
+
 void main() {
   test('returns cached instance', () async {
     final asyncRef = LiteAsyncRef<Point>(
@@ -11,6 +13,22 @@ void main() {
 
     final firstInstance = await asyncRef();
     final secondInstance = await asyncRef();
+
+    expect(firstInstance == secondInstance, isTrue);
+  });
+
+  test('returns same instance with race condition', () async {
+    var count = 0;
+    final asyncRef = LiteAsyncRef<Point>(
+      create: () async {
+        count++;
+        await Future<void>.delayed(k10ms * count);
+        return Point(1, 2);
+      },
+    );
+
+    final (firstInstance, secondInstance) =
+        await (asyncRef.instance, asyncRef.instance).wait;
 
     expect(firstInstance == secondInstance, isTrue);
   });
@@ -78,19 +96,21 @@ void main() {
     expect(ref2Instance.y, 6);
   });
 
-  test('should rerun create function is it crashed', () async {
+  test('should rerun create function if it crashed', () async {
     var count = 0;
     final asyncRef = LiteAsyncRef<Point>(
       create: () async {
         count++;
         if (count == 1) {
-          throw Exception('Crashed');
+          throw Exception('Crashed $count');
         }
         return Point(1, 2);
       },
     );
 
-    expect(() async => asyncRef(), throwsException);
+    await expectLater(asyncRef.call, throwsException);
+
+    expect(count, 1);
 
     final instance = await asyncRef();
     expect(instance.x, 1);

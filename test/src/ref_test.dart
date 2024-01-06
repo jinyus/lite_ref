@@ -35,6 +35,20 @@ void main() {
     expect(ref().x, 3);
   });
 
+  test('throws when overriding frozen ref', () {
+    final ref = LiteRef(create: () => Point(1, 2));
+
+    expect(ref().x, 1);
+
+    ref.overrideWith(() => Point(3, 4));
+
+    expect(ref().x, 3);
+
+    ref.freeze();
+
+    expect(() => ref.overrideWith(() => Point(5, 6)), throwsStateError);
+  });
+
   test('lazy create function should work', () {
     final ref = LiteRef<Point>();
 

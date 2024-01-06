@@ -15,6 +15,10 @@ void main() {
     final secondInstance = await asyncRef();
 
     expect(firstInstance == secondInstance, isTrue);
+
+    expect(asyncRef.hasInstance, isTrue);
+
+    expect(asyncRef.assertInstance == firstInstance, isTrue);
   });
 
   test('returns same instance with race condition', () async {
@@ -57,6 +61,27 @@ void main() {
 
     final secondInstance = await asyncRef();
     expect(secondInstance.x, 3);
+  });
+
+  test('throws when overriding frozen ref', () async {
+    final asyncRef = LiteAsyncRef<Point>(create: () async => Point(1, 2));
+
+    final firstInstance = await asyncRef();
+    expect(firstInstance.x, 1);
+
+    await asyncRef.overrideWith(() async {
+      return Point(3, 4);
+    });
+
+    final secondInstance = await asyncRef();
+    expect(secondInstance.x, 3);
+
+    asyncRef.freeze();
+
+    expect(
+      () async => asyncRef.overrideWith(() async => Point(5, 6)),
+      throwsStateError,
+    );
   });
 
   test('lazy create function should work', () async {
@@ -111,6 +136,10 @@ void main() {
     await expectLater(asyncRef.call, throwsException);
 
     expect(count, 1);
+
+    expect(asyncRef.hasInstance, isFalse);
+
+    expect(() => asyncRef.assertInstance, throwsStateError);
 
     final instance = await asyncRef();
     expect(instance.x, 1);

@@ -15,21 +15,24 @@ Lite Ref is a lightweight dependency injection library for Dart and Flutter.
 ## Why Lite Ref?
 
 -   **Fast**: Lite Ref doesn't use hashmaps to store instances so it's faster than _all_ other DI libraries.
+-   **Safe**: Lite Ref uses top level variables so it's impossible to get a NOT_FOUND error.
+-   **Lightweight**: Lite Ref has no dependencies.
 -   **Simple**: Lite Ref is simple to use and has a small API surface:
 
     -   Create a singleton:
 
         ```dart
         final dbRef = LiteRef(create: () => Database());
+        assert(dbRef.instance == dbRef.instance);
         ```
 
     -   Use it:
 
         ```dart
-        final db = dbRef.instance;
+        final db = dbRef.instance; // or dbRef()
         ```
 
-    -   Override it:
+    -   Override it (for testing):
 
         ```dart
         dbRef.overrideWith(() => MockDatabase());
@@ -45,6 +48,7 @@ Lite Ref is a lightweight dependency injection library for Dart and Flutter.
 
         ```dart
         final dbRef = LiteRef(create: () => Database(), cache: false);
+        assert(dbRef.instance != dbRef.instance);
         ```
 
     -   Create a singleton asynchronously:
@@ -65,9 +69,6 @@ Lite Ref is a lightweight dependency injection library for Dart and Flutter.
         // only use this if you know the instance is already created
         final db = dbRef.assertInstance;
         ```
-
--   **Safe**: Lite Ref uses top level variables so it's impossible to get a NOT_FOUND error.
--   **Lightweight**: Lite Ref has no dependencies.
 
 ## Installation
 

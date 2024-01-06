@@ -3,6 +3,8 @@ import 'package:test/test.dart';
 
 import 'ref_test.dart';
 
+const k10ms = Duration(milliseconds: 10);
+
 void main() {
   test('returns cached instance', () async {
     final asyncRef = LiteAsyncRef<Point>(
@@ -11,6 +13,26 @@ void main() {
 
     final firstInstance = await asyncRef();
     final secondInstance = await asyncRef();
+
+    expect(firstInstance == secondInstance, isTrue);
+
+    expect(asyncRef.hasInstance, isTrue);
+
+    expect(asyncRef.assertInstance == firstInstance, isTrue);
+  });
+
+  test('returns same instance with race condition', () async {
+    var count = 0;
+    final asyncRef = LiteAsyncRef<Point>(
+      create: () async {
+        count++;
+        await Future<void>.delayed(k10ms * count);
+        return Point(1, 2);
+      },
+    );
+
+    final (firstInstance, secondInstance) =
+        await (asyncRef.instance, asyncRef.instance).wait;
 
     expect(firstInstance == secondInstance, isTrue);
   });
@@ -39,6 +61,27 @@ void main() {
 
     final secondInstance = await asyncRef();
     expect(secondInstance.x, 3);
+  });
+
+  test('throws when overriding frozen ref', () async {
+    final asyncRef = LiteAsyncRef<Point>(create: () async => Point(1, 2));
+
+    final firstInstance = await asyncRef();
+    expect(firstInstance.x, 1);
+
+    await asyncRef.overrideWith(() async {
+      return Point(3, 4);
+    });
+
+    final secondInstance = await asyncRef();
+    expect(secondInstance.x, 3);
+
+    asyncRef.freeze();
+
+    expect(
+      () async => asyncRef.overrideWith(() async => Point(5, 6)),
+      throwsStateError,
+    );
   });
 
   test('lazy create function should work', () async {
@@ -78,19 +121,25 @@ void main() {
     expect(ref2Instance.y, 6);
   });
 
-  test('should rerun create function is it crashed', () async {
+  test('should rerun create function if it crashed', () async {
     var count = 0;
     final asyncRef = LiteAsyncRef<Point>(
       create: () async {
         count++;
         if (count == 1) {
-          throw Exception('Crashed');
+          throw Exception('Crashed $count');
         }
         return Point(1, 2);
       },
     );
 
-    expect(() async => asyncRef(), throwsException);
+    await expectLater(asyncRef.call, throwsException);
+
+    expect(count, 1);
+
+    expect(asyncRef.hasInstance, isFalse);
+
+    expect(() => asyncRef.assertInstance, throwsStateError);
 
     final instance = await asyncRef();
     expect(instance.x, 1);

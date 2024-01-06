@@ -11,6 +11,7 @@ class LiteRef<T> {
   final bool _cache;
   late T _instance = _create!();
   var _called = false;
+  var _frozen = false;
 
   /// Returns the value of the [LiteRef]. If caching is enabled,
   /// it will return the cached value.
@@ -32,11 +33,23 @@ class LiteRef<T> {
 
   /// Overrides the value of the current [LiteRef]
   /// with the provided [create].
+  /// Throws a [StateError] if `this` has been frozen.
   @visibleForTesting
   void overrideWith(T Function() create) {
+    if (_frozen) {
+      throw StateError(
+        'The value of the LiteRef has been frozen and cannot be overridden.',
+      );
+    }
     _create = create;
     if (_cache && _called) {
       _instance = _create!();
     }
+  }
+
+  /// Freezes the value of the [LiteRef].
+  /// After freezing, the value of the [LiteRef] cannot be overridden.
+  void freeze() {
+    _frozen = true;
   }
 }

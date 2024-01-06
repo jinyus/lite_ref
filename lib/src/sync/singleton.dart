@@ -11,6 +11,7 @@ class SingletonRef<T> extends TransientRef<T> {
   /// Returns the singleton instance of [T].
   @override
   T get instance {
+    if (_called) return _instance;
     _assertCreate();
     _called = true;
     return _instance;

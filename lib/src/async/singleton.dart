@@ -27,10 +27,10 @@ class AsyncSingletonRef<T> extends AsyncTransientRef<T> {
   /// Returns a the singleton instance of [T].
   @override
   Future<T> get instance async {
-    _assertCreate();
-
     // only return the instance if it was successfully created
     if (_success) return _instance as T;
+
+    _assertCreate();
 
     // if the instance is being created, wait for it to finish
     if (_lock != null) {
@@ -69,7 +69,9 @@ class AsyncSingletonRef<T> extends AsyncTransientRef<T> {
     _create = create;
 
     if (_success) {
+      _success = false;
       _instance = await _create!();
+      _success = true;
     }
   }
 }

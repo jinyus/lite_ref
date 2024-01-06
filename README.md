@@ -88,7 +88,7 @@ import 'package:lite_ref/lite_ref.dart';
 final dbRef = LiteRef(create: () => Database('example-connection-string'));
 
 // use it
-// refs are also callable so you can replace dbRef.instace with dbRef()
+// refs are also callable so you can replace dbRef.instance with dbRef()
 final db = dbRef.instance;
 
 // override for testing

@@ -76,6 +76,35 @@ void main() {
     expect(secondInstance.x, 3);
   });
 
+  test('return new instance when overriding fails', () async {
+    final asyncRef = Ref.asyncSingleton<Point>(
+      create: () async {
+        return Point(1, 2);
+      },
+    );
+
+    final firstInstance = await asyncRef();
+    expect(firstInstance.x, 1);
+
+    var count = 0;
+
+    await expectLater(
+      () async => asyncRef.overrideWith(() async {
+        count++;
+        if (count == 1) throw Exception('Crashed $count');
+        return Point(3, 4);
+      }),
+      throwsException,
+    );
+
+    expect(asyncRef.hasInstance, isFalse);
+
+    final secondInstance = await asyncRef();
+    expect(secondInstance.x, 3);
+
+    expect(count, 2);
+  });
+
   test('throws when overriding frozen ref', () async {
     final asyncRef = Ref.asyncSingleton<Point>(create: () async => Point(1, 2));
 

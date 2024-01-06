@@ -33,14 +33,15 @@ class UserService {
 
 void main() async {
 // create a singleton
-  final dbRef = LiteRef(create: () => Database('example-connection-string'));
+  final dbRef = Ref.singleton(
+    create: () => Database('example-connection-string'),
+  );
 
   final db = dbRef.instance;
 
-// create a transient (always new instance) by setting cache to false
-  final userServiceRef = LiteRef(
+// create a transient (always return new instance)
+  final userServiceRef = Ref.transient(
     create: () => UserService(database: db),
-    cache: false,
   );
 
   final userService = userServiceRef.instance;

@@ -1,3 +1,8 @@
+## 0.2.1
+
+-   Internal performance improvements
+-   fix minor bug where async singleton would not be replace when overridden
+
 ## 0.2.0
 
 -   separate singleton and transient instantiation use: `Ref.singleton`, `Ref.transient`, `Ref.asyncSingleton` and `Ref.asyncTransient`

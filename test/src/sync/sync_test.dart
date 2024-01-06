@@ -3,30 +3,35 @@
 import 'package:lite_ref/src/ref.dart';
 import 'package:test/test.dart';
 
-class Point {
-  Point(this.x, this.y);
-
-  final int x;
-  final int y;
-}
+import '../common.dart';
 
 void main() {
   test('can be instantiated', () {
-    expect(LiteRef<dynamic>(), isNotNull);
+    expect(Ref.singleton<dynamic>(), isNotNull);
   });
 
   test('returns cached instance', () {
-    final ref = LiteRef(create: () => Point(1, 2));
+    final ref = Ref.singleton(create: () => Point(1, 2));
     expect(ref() == ref(), isTrue);
   });
 
   test('returns fresh instance', () {
-    final ref = LiteRef(create: () => Point(1, 2), cache: false);
+    final ref = Ref.transient(create: () => Point(1, 2));
     expect(ref() == ref(), isFalse);
   });
 
-  test('override value with new create function', () {
-    final ref = LiteRef(create: () => Point(1, 2));
+  test('override singleton with new create function', () {
+    final ref = Ref.singleton(create: () => Point(1, 2));
+
+    expect(ref().x, 1);
+
+    ref.overrideWith(() => Point(3, 4));
+
+    expect(ref().x, 3);
+  });
+
+  test('override transient with new create function', () {
+    final ref = Ref.transient(create: () => Point(1, 2));
 
     expect(ref().x, 1);
 
@@ -36,7 +41,7 @@ void main() {
   });
 
   test('throws when overriding frozen ref', () {
-    final ref = LiteRef(create: () => Point(1, 2));
+    final ref = Ref.singleton(create: () => Point(1, 2));
 
     expect(ref().x, 1);
 
@@ -50,7 +55,7 @@ void main() {
   });
 
   test('lazy create function should work', () {
-    final ref = LiteRef<Point>();
+    final ref = Ref.singleton<Point>();
 
     ref.overrideWith(() => Point(1, 2));
 
@@ -58,14 +63,14 @@ void main() {
   });
 
   test('throws when creation function not set', () {
-    final ref = LiteRef<Point>();
+    final ref = Ref.singleton<Point>();
 
     expect(ref.call, throwsStateError);
   });
 
   test('should work with uninitialized ref', () {
-    final ref1 = LiteRef<Point>();
-    final ref2 = LiteRef(create: () => Point(1, ref1().y));
+    final ref1 = Ref.singleton<Point>();
+    final ref2 = Ref.singleton(create: () => Point(1, ref1().y));
 
     ref1.overrideWith(() => Point(5, 6));
 

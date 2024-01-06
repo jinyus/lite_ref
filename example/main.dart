@@ -5,15 +5,15 @@ import 'package:lite_ref/lite_ref.dart';
 class Database {
   Database(this.connectionString);
 
-  final Map<String, dynamic> _cache = {};
+  final Map<String, String> _cache = {};
   final String connectionString;
 
-  Future<void> save(String key, dynamic value) async {
-    return _cache[key] = value;
+  Future<void> save(String key, String value) async {
+    _cache[key] = value;
   }
 
-  Future<dynamic> get(String key) async {
-    return _cache[key];
+  Future<String> get(String key) async {
+    return _cache[key]!;
   }
 }
 
@@ -27,20 +27,21 @@ class UserService {
   }
 
   Future<String> getUser() async {
-    return database.get('user') as String;
+    return database.get('user');
   }
 }
 
 void main() async {
 // create a singleton
-  final dbRef = LiteRef(create: () => Database('example-connection-string'));
+  final dbRef = Ref.singleton(
+    create: () => Database('example-connection-string'),
+  );
 
   final db = dbRef.instance;
 
-// create a transient (always new instance) by setting cache to false
-  final userServiceRef = LiteRef(
+// create a transient (always return new instance)
+  final userServiceRef = Ref.transient(
     create: () => UserService(database: db),
-    cache: false,
   );
 
   final userService = userServiceRef.instance;

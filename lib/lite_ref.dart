@@ -1,5 +1,6 @@
 /// A lightweight dependency injection package.
 library lite_ref;
 
-export 'src/async_ref.dart';
+export 'src/async/async.dart';
 export 'src/ref.dart';
+export 'src/sync/sync.dart';

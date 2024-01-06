@@ -1,55 +1,29 @@
-import 'package:meta/meta.dart';
+import 'package:lite_ref/src/async/async.dart';
+import 'package:lite_ref/src/sync/sync.dart';
 
-/// A [LiteRef] is a reference to a value that can be overridden.
-class LiteRef<T> {
-  /// {@macro ref}
-  LiteRef({T Function()? create, bool cache = true})
-      : _cache = cache,
-        _create = create;
-
-  T Function()? _create;
-  final bool _cache;
-  late T _instance = _create!();
-  var _called = false;
-  var _frozen = false;
-
-  /// Returns the value of the [LiteRef]. If caching is enabled,
-  /// it will return the cached value.
-  /// Otherwise, it will call the create function to generate a new value.
-  T get instance {
-    if (_create == null) {
-      throw StateError(
-        'The creation function is not defined. '
-        'Did you forget to call `overrideWith`?',
-      );
-    }
-    _called = true;
-    return _cache ? _instance : _create!();
+/// {@macro ref}
+abstract class Ref {
+  /// Creates a new [SingletonRef] which always return the same instance.
+  static SingletonRef<T> singleton<T>({T Function()? create}) {
+    return SingletonRef<T>(create: create);
   }
 
-  /// A shorthand for getting the value of the [LiteRef].
-  /// It's equivalent to calling the [instance] getter.
-  T call() => instance;
-
-  /// Overrides the value of the current [LiteRef]
-  /// with the provided [create].
-  /// Throws a [StateError] if `this` has been frozen.
-  @visibleForTesting
-  void overrideWith(T Function() create) {
-    if (_frozen) {
-      throw StateError(
-        'The value of the LiteRef has been frozen and cannot be overridden.',
-      );
-    }
-    _create = create;
-    if (_cache && _called) {
-      _instance = _create!();
-    }
+  /// Creates a new [TransientRef] which always return a new instance.
+  static TransientRef<T> transient<T>({T Function()? create}) {
+    return TransientRef<T>(create: create);
   }
 
-  /// Freezes the value of the [LiteRef].
-  /// After freezing, the value of the [LiteRef] cannot be overridden.
-  void freeze() {
-    _frozen = true;
+  /// Creates a new [AsyncSingletonRef] which always return the same instance.
+  static AsyncSingletonRef<T> asyncSingleton<T>({
+    Future<T> Function()? create,
+  }) {
+    return AsyncSingletonRef<T>(create: create);
+  }
+
+  /// Creates a new [AsyncTransientRef] which always return a new instance.
+  static AsyncTransientRef<T> asyncTransient<T>({
+    Future<T> Function()? create,
+  }) {
+    return AsyncTransientRef<T>(create: create);
   }
 }

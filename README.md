@@ -12,6 +12,12 @@
 
 Lite Ref is a lightweight dependency injection library for Dart and Flutter.
 
+## Installation
+
+```bash
+dart pub add lite_ref
+```
+
 ## Why Lite Ref?
 
 -   **Fast**: Lite Ref doesn't use hashmaps to store instances so it's faster than _all_ other DI libraries.
@@ -22,7 +28,8 @@ Lite Ref is a lightweight dependency injection library for Dart and Flutter.
     -   Create a singleton:
 
         ```dart
-        final dbRef = LiteRef(create: () => Database());
+        final dbRef = Ref.singleton(create: () => Database());
+
         assert(dbRef.instance == dbRef.instance);
         ```
 
@@ -47,14 +54,15 @@ Lite Ref is a lightweight dependency injection library for Dart and Flutter.
     -   Create a transient instance (always return new instance):
 
         ```dart
-        final dbRef = LiteRef(create: () => Database(), cache: false);
+        final dbRef = Ref.transient(create: () => Database());
+
         assert(dbRef.instance != dbRef.instance);
         ```
 
     -   Create a singleton asynchronously:
 
         ```dart
-        final dbRef = LiteAsyncRef(create: () async => await Database.init());
+        final dbRef = Ref.asyncSingleton(create: () async => await Database.init());
         ```
 
     -   Use it:
@@ -69,34 +77,3 @@ Lite Ref is a lightweight dependency injection library for Dart and Flutter.
         // only use this if you know the instance is already created
         final db = dbRef.assertInstance;
         ```
-
-## Installation
-
-```bash
-dart pub add lite_ref
-```
-
-## Usage
-
-LifeRefs are lazy. They are only instantiated when you call `instance` or `()`.
-
-```dart
-import 'package:lite_ref/lite_ref.dart';
-
-
-// create a singleton
-final dbRef = LiteRef(create: () => Database('example-connection-string'));
-
-// use it
-// refs are also callable so you can replace dbRef.instance with dbRef()
-final db = dbRef.instance;
-
-// override for testing
-dbRef.overrideWith(() => MockDatabase());
-
-// create a transient (always new instance) by setting cache to false
-final userServiceRef = LiteRef(
-    create: () => UserService(database: db),
-    cache: false,
-  );
-```

@@ -20,10 +20,10 @@ dart pub add lite_ref
 
 ## Why Lite Ref?
 
--   **Fast**: Lite Ref doesn't use hashmaps to store instances so it's faster than _all_ other DI libraries.
--   **Safe**: Lite Ref uses top level variables so it's impossible to get a NOT_FOUND error.
--   **Lightweight**: Lite Ref has no dependencies.
--   **Simple**: Lite Ref is simple to use and has a small API surface:
+-   **Fast**: Doesn't use hashmaps to store instances so it's faster than _all_ other DI libraries.
+-   **Safe**: Uses top level variables so it's impossible to get a NOT_FOUND error.
+-   **Lightweight**: Has no dependencies.
+-   **Simple**: Easy to learn with a small API surface:
 
     -   Create a singleton:
 

@@ -8,7 +8,7 @@ const k10ms = Duration(milliseconds: 10);
 void main() {
   test('returns cached instance', () async {
     final asyncRef = Ref.asyncSingleton<Point>(
-      create: () async => Point(1, 2),
+      () async => Point(1, 2),
     );
 
     final firstInstance = await asyncRef();
@@ -24,7 +24,7 @@ void main() {
   test('returns same instance with race condition', () async {
     var count = 0;
     final asyncRef = Ref.asyncSingleton<Point>(
-      create: () async {
+      () async {
         count++;
         await Future<void>.delayed(k10ms * count);
         return Point(1, 2);
@@ -39,7 +39,7 @@ void main() {
 
   test('returns fresh instance', () async {
     final asyncRef = Ref.asyncTransient<Point>(
-      create: () async => Point(1, 2),
+      () async => Point(1, 2),
     );
 
     final firstInstance = await asyncRef();
@@ -49,7 +49,7 @@ void main() {
   });
 
   test('override singleton with new create function', () async {
-    final asyncRef = Ref.asyncSingleton<Point>(create: () async => Point(1, 2));
+    final asyncRef = Ref.asyncSingleton<Point>(() async => Point(1, 2));
 
     final firstInstance = await asyncRef();
     expect(firstInstance.x, 1);
@@ -63,7 +63,7 @@ void main() {
   });
 
   test('override transient with new create function', () async {
-    final asyncRef = Ref.asyncTransient<Point>(create: () async => Point(1, 2));
+    final asyncRef = Ref.asyncTransient<Point>(() async => Point(1, 2));
 
     final firstInstance = await asyncRef();
     expect(firstInstance.x, 1);
@@ -78,7 +78,7 @@ void main() {
 
   test('return new instance when overriding fails', () async {
     final asyncRef = Ref.asyncSingleton<Point>(
-      create: () async {
+      () async {
         return Point(1, 2);
       },
     );
@@ -106,7 +106,7 @@ void main() {
   });
 
   test('throws when overriding frozen ref', () async {
-    final asyncRef = Ref.asyncSingleton<Point>(create: () async => Point(1, 2));
+    final asyncRef = Ref.asyncSingleton<Point>(() async => Point(1, 2));
 
     final firstInstance = await asyncRef();
     expect(firstInstance.x, 1);
@@ -126,31 +126,17 @@ void main() {
     );
   });
 
-  test('lazy create function should work', () async {
-    final asyncRef = Ref.asyncSingleton<Point>();
-
-    await asyncRef.overrideWith(() async => Point(1, 2));
-
-    final instance = await asyncRef();
-    expect(instance, isA<Point>());
-  });
-
-  test('throws when creation function not set', () async {
-    final asyncRef = Ref.asyncSingleton<Point>();
-
-    expect(() async => asyncRef(), throwsStateError);
-  });
-
   test('should work with uninitialized ref', () async {
-    final asyncRef1 = Ref.asyncSingleton<Point>();
+    late final AsyncSingletonRef<Point> asyncRef1;
+
     final asyncRef2 = Ref.asyncSingleton<Point>(
-      create: () async {
+      () async {
         final yValue = (await asyncRef1()).y;
         return Point(1, yValue);
       },
     );
 
-    await asyncRef1.overrideWith(() async {
+    asyncRef1 = Ref.asyncSingleton<Point>(() async {
       return Point(5, 6);
     });
 
@@ -166,7 +152,7 @@ void main() {
   test('should rerun create function if it crashed', () async {
     var count = 0;
     final asyncRef = Ref.asyncSingleton<Point>(
-      create: () async {
+      () async {
         count++;
         if (count == 1) {
           throw Exception('Crashed $count');

@@ -28,7 +28,7 @@ dart pub add lite_ref
     -   Create a singleton:
 
         ```dart
-        final dbRef = Ref.singleton(create: () => Database());
+        final dbRef = Ref.singleton(() => Database());
 
         assert(dbRef.instance == dbRef.instance);
         ```
@@ -48,13 +48,14 @@ dart pub add lite_ref
     -   Freeze it (disable overriding):
 
         ```dart
+        // overrideWith is marked as @visibleForTesting so this isn't really necessary.
         dbRef.freeze();
         ```
 
     -   Create a transient instance (always return new instance):
 
         ```dart
-        final dbRef = Ref.transient(create: () => Database());
+        final dbRef = Ref.transient(() => Database());
 
         assert(dbRef.instance != dbRef.instance);
         ```
@@ -62,7 +63,7 @@ dart pub add lite_ref
     -   Create a singleton asynchronously:
 
         ```dart
-        final dbRef = Ref.asyncSingleton(create: () async => await Database.init());
+        final dbRef = Ref.asyncSingleton(() async => await Database.init());
         ```
 
     -   Use it:
@@ -77,3 +78,5 @@ dart pub add lite_ref
         // only use this if you know the instance is already created
         final db = dbRef.assertInstance;
         ```
+
+### Click [here](https://github.com/jinyus/lite_ref/tree/main/example/flutter_example) for a flutter example with testing.

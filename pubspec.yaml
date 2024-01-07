@@ -1,6 +1,6 @@
 name: lite_ref
 description: A lightweight dependency injection package with support for overriding for testing.
-version: 0.2.1
+version: 0.3.0
 repository: https://github.com/jinyus/lite_ref
 
 environment:

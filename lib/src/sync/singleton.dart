@@ -3,16 +3,15 @@ part of 'sync.dart';
 /// A [SingletonRef] is a reference that always returns a new instance.
 class SingletonRef<T> extends TransientRef<T> {
   /// {@macro ref}
-  SingletonRef({super.create});
+  SingletonRef(super.create);
 
-  late T _instance = _create!();
+  late T _instance = _create();
   var _called = false;
 
   /// Returns the singleton instance of [T].
   @override
   T get instance {
     if (_called) return _instance;
-    _assertCreate();
     _called = true;
     return _instance;
   }
@@ -25,7 +24,7 @@ class SingletonRef<T> extends TransientRef<T> {
     _assertNotFrozen();
     _create = create;
     if (_called) {
-      _instance = _create!();
+      _instance = _create();
     }
   }
 }

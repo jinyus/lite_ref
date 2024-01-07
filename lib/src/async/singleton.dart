@@ -4,7 +4,7 @@ part of 'async.dart';
 /// function that always return the same instance.
 class AsyncSingletonRef<T> extends AsyncTransientRef<T> {
   /// {@macro ref}
-  AsyncSingletonRef({super.create});
+  AsyncSingletonRef(super.create);
 
   T? _instance;
   var _success = false;
@@ -30,8 +30,6 @@ class AsyncSingletonRef<T> extends AsyncTransientRef<T> {
     // only return the instance if it was successfully created
     if (_success) return _instance as T;
 
-    _assertCreate();
-
     // if the instance is being created, wait for it to finish
     if (_lock != null) {
       final result = await _lock!.future;
@@ -45,7 +43,7 @@ class AsyncSingletonRef<T> extends AsyncTransientRef<T> {
     _lock = Completer<Object?>();
 
     try {
-      _instance = await _create!();
+      _instance = await _create();
 
       _success = true;
 
@@ -70,7 +68,7 @@ class AsyncSingletonRef<T> extends AsyncTransientRef<T> {
 
     if (_success) {
       _success = false;
-      _instance = await _create!();
+      _instance = await _create();
       _success = true;
     }
   }

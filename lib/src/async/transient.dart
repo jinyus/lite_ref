@@ -7,20 +7,11 @@ typedef AsyncFactory<T> = Future<T> Function();
 /// factory/creation function that always return a new instance.
 class AsyncTransientRef<T> {
   /// {@macro ref}
-  AsyncTransientRef({AsyncFactory<T>? create}) : _create = create;
+  AsyncTransientRef(AsyncFactory<T> create) : _create = create;
 
-  AsyncFactory<T>? _create;
+  AsyncFactory<T> _create;
 
   var _frozen = false;
-
-  void _assertCreate() {
-    if (_create == null) {
-      throw StateError(
-        'The creation function is not defined. '
-        'Did you forget to call `overrideWith`?',
-      );
-    }
-  }
 
   void _assertNotFrozen() {
     if (_frozen) {
@@ -29,10 +20,7 @@ class AsyncTransientRef<T> {
   }
 
   /// Returns a new instance of [T].
-  Future<T> get instance {
-    _assertCreate();
-    return _create!();
-  }
+  Future<T> get instance => _create();
 
   /// Equivalent to calling the [instance] getter.
   Future<T> call() => instance;

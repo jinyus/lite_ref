@@ -3,20 +3,11 @@ part of 'sync.dart';
 /// A [TransientRef] is a reference that always return a new instance.
 class TransientRef<T> {
   /// {@macro ref}
-  TransientRef({T Function()? create}) : _create = create;
+  TransientRef(T Function() create) : _create = create;
 
-  T Function()? _create;
+  T Function() _create;
 
   var _frozen = false;
-
-  void _assertCreate() {
-    if (_create == null) {
-      throw StateError(
-        'The creation function is not defined. '
-        'Did you forget to call `overrideWith`?',
-      );
-    }
-  }
 
   void _assertNotFrozen() {
     if (_frozen) {
@@ -26,8 +17,7 @@ class TransientRef<T> {
 
   /// Returns a new instance of [T].
   T get instance {
-    _assertCreate();
-    return _create!();
+    return _create();
   }
 
   /// Equivalent to calling the [instance] getter.

@@ -34,14 +34,14 @@ class UserService {
 void main() async {
 // create a singleton
   final dbRef = Ref.singleton(
-    create: () => Database('example-connection-string'),
+    () => Database('example-connection-string'),
   );
 
   final db = dbRef.instance;
 
 // create a transient (always return new instance)
   final userServiceRef = Ref.transient(
-    create: () => UserService(database: db),
+    () => UserService(database: db),
   );
 
   final userService = userServiceRef.instance;

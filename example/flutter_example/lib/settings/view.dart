@@ -1,3 +1,5 @@
+// ignore_for_file: lines_longer_than_80_chars
+
 import 'package:flutter/material.dart';
 import 'package:flutter_example/deps.dart';
 import 'package:flutter_example/main.dart';
@@ -39,7 +41,7 @@ class SettingsView extends StatelessWidget {
                 DropdownMenuItem(
                   value: ThemeMode.dark,
                   child: Text('Dark Theme'),
-                )
+                ),
               ],
             );
           },

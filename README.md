@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="500" src="https://github.com/jinyus/lite_ref/blob/main/assets/logo.jpg?raw=true">
+  <img width="500" src="https://github.com/jinyus/lite_ref/blob/main/assets/lite_ref_banner.jpg?raw=true">
 </p>
 
 <p align="center">

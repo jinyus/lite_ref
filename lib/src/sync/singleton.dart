@@ -24,7 +24,9 @@ class SingletonRef<T> extends TransientRef<T> {
   @visibleForTesting
   void overrideWith(T Function() create) {
     _assertNotFrozen();
+
     _create = create;
+
     if (_called) {
       _instance = _create();
     }

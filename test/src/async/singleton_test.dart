@@ -37,38 +37,13 @@ void main() {
     expect(firstInstance == secondInstance, isTrue);
   });
 
-  test('returns fresh instance', () async {
-    final asyncRef = Ref.asyncTransient<Point>(
-      () async => Point(1, 2),
-    );
-
-    final firstInstance = await asyncRef();
-    final secondInstance = await asyncRef();
-
-    expect(firstInstance == secondInstance, isFalse);
-  });
-
-  test('override singleton with new create function', () async {
+  test('should override with new create function', () async {
     final asyncRef = Ref.asyncSingleton<Point>(() async => Point(1, 2));
 
     final firstInstance = await asyncRef();
     expect(firstInstance.x, 1);
 
     await asyncRef.overrideWith(() async {
-      return Point(3, 4);
-    });
-
-    final secondInstance = await asyncRef();
-    expect(secondInstance.x, 3);
-  });
-
-  test('override transient with new create function', () async {
-    final asyncRef = Ref.asyncTransient<Point>(() async => Point(1, 2));
-
-    final firstInstance = await asyncRef();
-    expect(firstInstance.x, 1);
-
-    asyncRef.overrideWith(() async {
       return Point(3, 4);
     });
 
@@ -100,6 +75,7 @@ void main() {
     expect(asyncRef.hasInstance, isFalse);
 
     final secondInstance = await asyncRef();
+
     expect(secondInstance.x, 3);
 
     expect(count, 2);

@@ -8,8 +8,34 @@ void main() {
     expect(Ref.singleton<dynamic>(() => 1), isNotNull);
   });
 
+  test('should lazily instantiate', () {
+    var called = 0;
+
+    Point create() {
+      called++;
+      return Point(1, 2);
+    }
+
+    final ref = Ref.singleton<Point>(create);
+
+    expect(called, 0);
+
+    ref.overrideWith(create);
+
+    expect(called, 0);
+
+    ref();
+
+    expect(called, 1);
+
+    ref();
+
+    expect(called, 1);
+  });
+
   test('returns same instance', () {
     final ref = Ref.singleton(() => Point(1, 2));
+    expect(ref() == ref(), isTrue);
     expect(ref() == ref(), isTrue);
   });
 
@@ -70,7 +96,7 @@ void main() {
     expect(ref2().y, 6);
   });
 
-  test('throws when overriding frozen ref', () {
+  test('should throw when overriding frozen ref', () {
     final ref = Ref.singleton(() => Point(1, 2));
 
     expect(ref().x, 1);

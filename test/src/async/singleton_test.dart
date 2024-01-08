@@ -11,6 +11,8 @@ void main() {
       () async => Point(1, 2),
     );
 
+    expect(asyncRef.hasInstance, isFalse);
+
     final firstInstance = await asyncRef();
     final secondInstance = await asyncRef();
 
@@ -81,7 +83,7 @@ void main() {
     expect(count, 2);
   });
 
-  test('throws when overriding frozen ref', () async {
+  test('should throw when overriding frozen ref', () async {
     final asyncRef = Ref.asyncSingleton<Point>(() async => Point(1, 2));
 
     final firstInstance = await asyncRef();

@@ -12,7 +12,9 @@ class SingletonRef<T> extends TransientRef<T> {
   @override
   T get instance {
     if (_called) return _instance;
+
     _called = true;
+
     return _instance;
   }
 

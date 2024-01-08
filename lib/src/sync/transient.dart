@@ -31,7 +31,7 @@ class TransientRef<T> {
     _create = create;
   }
 
-  /// Disables overriding of the creation function.
+  /// Disables overriding.
   void freeze() {
     _frozen = true;
   }

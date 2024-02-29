@@ -1,14 +1,17 @@
 name: lite_ref
 description: A lightweight dependency injection package with support for overriding for testing.
-version: 0.3.0
+version: 0.4.0
 repository: https://github.com/jinyus/lite_ref
 
 environment:
     sdk: ">=3.0.0 <4.0.0"
+    flutter: ">=3.10.0"
 
 dependencies:
-    meta: ^1.0.0
+    flutter:
+        sdk: flutter
 
 dev_dependencies:
-    test: ^1.19.2
+    flutter_test:
+        sdk: flutter
     very_good_analysis: ^5.1.0

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:meta/meta.dart';
+import 'package:flutter/foundation.dart';
 
 part 'singleton.dart';
 part 'transient.dart';

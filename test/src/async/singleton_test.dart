@@ -1,5 +1,5 @@
+import 'package:flutter_test/flutter_test.dart';
 import 'package:lite_ref/lite_ref.dart';
-import 'package:test/test.dart';
 
 import '../common.dart';
 

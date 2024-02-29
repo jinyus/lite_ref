@@ -23,60 +23,112 @@ dart pub add lite_ref
 -   **Fast**: Doesn't use hashmaps to store instances so it's faster than _all_ other DI libraries.
 -   **Safe**: Uses top level variables so it's impossible to get a NOT_FOUND error.
 -   **Lightweight**: Has no dependencies.
--   **Simple**: Easy to learn with a small API surface:
+-   **Simple**: Easy to learn with a small API surface
 
-    -   Create a singleton:
+## Scoped Refs
 
-        ```dart
-        final dbRef = Ref.singleton(() => Database());
+A `ScopedRef` is a reference that needs a build context to access its instance. This is an alternative to `Provider` for classes that don't rebuild widgets. eg: Controllers, Repositories, Services, etc.
 
-        assert(dbRef.instance == dbRef.instance);
-        ```
+-   Wrap your app with a `LiteRefScope`:
 
-    -   Use it:
+    ```dart
+    runApp(
+      LiteRefScope(
+        child: MyApp(),
+      ),
+    );
+    ```
 
-        ```dart
-        final db = dbRef.instance; // or dbRef()
-        ```
+-   Create a `ScopedRef`.
 
-    -   Override it (for testing):
+    ```dart
+    final settingsServiceRef = Ref.scoped((ctx) => SettingsService());
+    ```
 
-        ```dart
-        dbRef.overrideWith(() => MockDatabase());
-        ```
+-   Access the instance in the current scope:
 
-    -   Freeze it (disable overriding):
+    This can be done in a widget by using `settingsServiceRef.of(context)` or `settingsServiceRef(context)`.
 
-        ```dart
-        // overrideWith is marked as @visibleForTesting so this isn't really necessary.
-        dbRef.freeze();
-        ```
+    ```dart
+    class SettingsPage extends StatelessWidget {
+      const SettingsPage({super.key});
 
-    -   Create a transient instance (always return new instance):
+      @override
+      Widget build(BuildContext context) {
+        final settingsService = settingsServiceRef.of(context);
+        return Text(settingsService.getThemeMode());
+      }
+    }
+    ```
 
-        ```dart
-        final dbRef = Ref.transient(() => Database());
+-   Override it for a subtree:
 
-        assert(dbRef.instance != dbRef.instance);
-        ```
+    You can override the instance for a subtree by using `overrideWith`. This is useful for testing.
+    In the example below all calls to `settingsServiceRef.of(context)` will return `MockSettingsService`.
 
-    -   Create a singleton asynchronously:
-
-        ```dart
-        final dbRef = Ref.asyncSingleton(() async => await Database.init());
-        ```
-
-    -   Use it:
-
-        ```dart
-        final db = await dbRef.instance;
-        ```
-
-    -   Use it synchronously:
-
-        ```dart
-        // only use this if you know the instance is already created
-        final db = dbRef.assertInstance;
-        ```
+    ```dart
+    LiteRefScope(
+        overrides: [
+            settingsServiceRef.overrideWith((ctx) => MockSettingsService()),
+        ]
+        child: MyApp(),
+        ),
+    ```
 
 ### Click [here](https://github.com/jinyus/lite_ref/tree/main/example/flutter_example) for a flutter example with testing.
+
+## Global Singletons and Transients
+
+-   Create a singleton:
+
+    ```dart
+    final dbRef = Ref.singleton(() => Database());
+
+    assert(dbRef.instance == dbRef.instance);
+    ```
+
+-   Use it:
+
+    ```dart
+    final db = dbRef.instance; // or dbRef()
+    ```
+
+-   Override it (for testing):
+
+    ```dart
+    dbRef.overrideWith(() => MockDatabase());
+    ```
+
+-   Freeze it (disable overriding):
+
+    ```dart
+    // overrideWith is marked as @visibleForTesting so this isn't really necessary.
+    dbRef.freeze();
+    ```
+
+-   Create a transient instance (always return new instance):
+
+    ```dart
+    final dbRef = Ref.transient(() => Database());
+
+    assert(dbRef.instance != dbRef.instance);
+    ```
+
+-   Create a singleton asynchronously:
+
+    ```dart
+    final dbRef = Ref.asyncSingleton(() async => await Database.init());
+    ```
+
+-   Use it:
+
+    ```dart
+    final db = await dbRef.instance;
+    ```
+
+-   Use it synchronously:
+
+    ```dart
+    // only use this if you know the instance is already created
+    final db = dbRef.assertInstance;
+    ```

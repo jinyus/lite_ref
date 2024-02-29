@@ -33,7 +33,7 @@ class ScopedRef<T> {
     _instance = _create(context);
   }
 
-  /// Returns a new instance of [T].
+  /// Returns the instance of [T] in the current scope.
   T of(BuildContext context) {
     final box = LiteRefScope._of(context);
 
@@ -62,13 +62,12 @@ class ScopedRef<T> {
   T call(BuildContext context) => of(context);
 
   /// Returns a new ScopedRef with a different [create] function.
-  /// When used with a [LiteRefScope], any child widget that accesses
+  /// When used with a [LiteRefScope] overrides, any child widget that accesses
   /// the instance will use the new [create] function.
   ScopedRef<T> overrideWith(CtxCreateFn<T> create) {
     return ScopedRef._(create, _id, dispose: _onDispose);
   }
 
-  /// Clears the instance and calls the dispose function if it exists.
   void _dispose() {
     if (_instance == null) return;
     _onDispose?.call(_instance as T);

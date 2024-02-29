@@ -15,8 +15,10 @@ class LiteRefScope extends InheritedWidget {
   final Set<ScopedRef<dynamic>>? _overrides;
   late final _cache = _Cache();
 
+  // coverage:ignore-start
   @override
   bool updateShouldNotify(covariant InheritedWidget oldWidget) => false;
+  // coverage:ignore-end
 
   @override
   InheritedElement createElement() => _Element(this);

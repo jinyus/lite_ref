@@ -1,10 +1,6 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lite_ref/lite_ref.dart';
-import 'package:lite_ref/src/ref.dart';
 
 void main() {
   test('overriden instance should be equal to main', () {
@@ -55,9 +51,8 @@ void main() {
           home: Builder(
             builder: (context) {
               // This should trigger the error
-              // final val = countRef(context);
               expect(() => countRef(context), throwsArgumentError);
-              return const Text('1');
+              return const SizedBox.shrink();
             },
           ),
         ),
@@ -80,12 +75,17 @@ void main() {
                 overrides: [
                   countRef.overrideWith((ctx) => 2),
                 ],
-                child: Builder(
-                  builder: (context) {
-                    val = countRef(context);
-                    expect(val, 2);
-                    return const SizedBox.shrink();
-                  },
+                child: Column(
+                  children: [
+                    Text('$val'),
+                    Builder(
+                      builder: (context) {
+                        val = countRef(context);
+                        expect(val, 2);
+                        return Text('$val');
+                      },
+                    ),
+                  ],
                 ),
               );
             },
@@ -93,5 +93,8 @@ void main() {
         ),
       ),
     );
+
+    expect(find.text('1'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
   });
 }

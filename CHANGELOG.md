@@ -1,6 +1,6 @@
 ## 0.3.0
 
--   Make the factory function non-nullable (improves performace and maintainability)
+-   Make the factory function non-nullable (improves performance and maintainability)
 
 ## 0.2.1
 

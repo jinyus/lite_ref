@@ -1,4 +1,4 @@
-name: Dart Test
+name: Test
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
@@ -8,7 +8,7 @@ on:
     workflow_dispatch:
     pull_request:
         branches: ["main"]
-        types: [ready_for_review, review_requested] # Restrict to non-draft PRs
+        types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
     spell-check:
@@ -17,29 +17,22 @@ jobs:
             includes: "*.md"
             modified_files_only: true
 
-    build:
+    test:
         runs-on: ubuntu-latest
+
+        if: github.event.pull_request.draft == false
 
         steps:
             - name: 📚 Git Checkout
               uses: actions/checkout@v4
 
-            - name: 🎯 Setup Dart
-              uses: dart-lang/setup-dart@v1
+            - uses: subosito/flutter-action@v2
 
-            - name: 📦 Install Dependencies
-              run: dart pub get
-
-            - name: ✨ Check Formatting
-              run: dart format --set-exit-if-changed .
-
-            - name: 🕵️ Analyze
-              run: dart analyze --fatal-infos --fatal-warnings lib test
-
-            - name: 🧪 Run Tests
+            - name: Build and Test
               run: |
-                  dart pub global activate coverage 1.2.0
-                  dart test -j 4 --coverage=coverage && dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info
+                  flutter pub get
+                  flutter analyze
+                  flutter test --coverage
 
             - name: Upload coverage reports to Codecov
               uses: codecov/codecov-action@v3

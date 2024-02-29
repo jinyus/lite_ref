@@ -51,7 +51,7 @@ void main() {
           home: Builder(
             builder: (context) {
               // This should trigger the error
-              expect(() => countRef(context), throwsArgumentError);
+              expect(() => countRef(context), throwsStateError);
               return const SizedBox.shrink();
             },
           ),

@@ -30,7 +30,7 @@ class LiteRefScope extends InheritedWidget {
   }
 
   static Never _notFound() {
-    throw ArgumentError(
+    throw StateError(
       '''
   You must wrap your app with a `LiteRefScope`.
 

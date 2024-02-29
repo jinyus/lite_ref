@@ -29,7 +29,7 @@ dart pub add lite_ref
 
 A `ScopedRef` is a reference that needs a build context to access its instance. This is an alternative to `Provider` for classes that don't rebuild widgets. eg: Controllers, Repositories, Services, etc.
 
--   Wrap your app with a `LiteRefScope`:
+-   Wrap your app or a subtree with a `LiteRefScope`:
 
     ```dart
     runApp(
@@ -64,7 +64,7 @@ A `ScopedRef` is a reference that needs a build context to access its instance. 
 -   Override it for a subtree:
 
     You can override the instance for a subtree by using `overrideWith`. This is useful for testing.
-    In the example below all calls to `settingsServiceRef.of(context)` will return `MockSettingsService`.
+    In the example below, all calls to `settingsServiceRef.of(context)` will return `MockSettingsService`.
 
     ```dart
     LiteRefScope(

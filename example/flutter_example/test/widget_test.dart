@@ -11,6 +11,7 @@ import 'package:flutter_example/main.dart';
 import 'package:flutter_example/settings/controller.dart';
 import 'package:flutter_example/settings/service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lite_ref/lite_ref.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockSettingsService extends Mock implements SettingsService {}
@@ -20,11 +21,6 @@ class MockSettingsController extends Mock implements SettingsController {}
 void main() {
   final mockSettingsService = MockSettingsService();
   final mockSettingsController = MockSettingsController();
-
-  setUp(() {
-    settingsServiceRef.overrideWith(() => mockSettingsService);
-    settingsControllerRef.overrideWith(() => mockSettingsController);
-  });
 
   testWidgets('Controller test', (WidgetTester tester) async {
     when(mockSettingsController.loadSettings).thenAnswer((_) async {});
@@ -36,7 +32,15 @@ void main() {
     );
 
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      LiteRefScope(
+        overrides: [
+          settingsServiceRef.overrideWith((_) => mockSettingsService),
+          settingsControllerRef.overrideWith((_) => mockSettingsController),
+        ],
+        child: const MyApp(),
+      ),
+    );
 
     await tester.pumpAndSettle();
 

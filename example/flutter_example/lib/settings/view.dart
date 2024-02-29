@@ -11,7 +11,7 @@ class SettingsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = settingsControllerRef();
+    final controller = settingsControllerRef(context);
 
     return Scaffold(
       appBar: MyAppBar(context, title: 'Settings'),
@@ -22,7 +22,7 @@ class SettingsView extends StatelessWidget {
         // When a user selects a theme from the dropdown list, the
         // SettingsController is updated, which rebuilds the MaterialApp.
         child: ListenableBuilder(
-          listenable: settingsControllerRef(),
+          listenable: controller,
           builder: (context, snapshot) {
             return DropdownButton<ThemeMode>(
               // Read the selected themeMode from the controller

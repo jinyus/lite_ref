@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_example/deps.dart';
 import 'package:flutter_example/settings/view.dart';
+import 'package:lite_ref/lite_ref.dart';
 
 void main(List<String> args) {
-  runApp(const MyApp());
+  runApp(LiteRefScope(child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -11,7 +12,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = settingsControllerRef();
+    final controller = settingsControllerRef(context);
     return FutureBuilder(
       future: controller.loadSettings(),
       builder: (context, snapshot) {

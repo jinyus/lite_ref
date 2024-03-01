@@ -17,6 +17,13 @@
             "flutterMode": "debug"
         },
         {
+            "name": "counter_example",
+            "cwd": "example/counter",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "debug"
+        },
+        {
             "name": "flutter_example (profile mode)",
             "cwd": "example/flutter_example",
             "request": "launch",

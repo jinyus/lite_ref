@@ -1,10 +1,63 @@
+// ignore_for_file: lines_longer_than_80_chars
+
 import 'package:lite_ref/src/async/async.dart';
 import 'package:lite_ref/src/scoped/scoped.dart';
 import 'package:lite_ref/src/sync/sync.dart';
 
-/// {@macro ref}
+/// abstract class for creating refs.
+/// ```dart
+/// final scoped = Ref.scoped((context) => AuthService());
+/// final singleton = Ref.singleton(() => Database());
+/// final transient = Ref.transient(() => APIClient());
+/// ```
 abstract class Ref {
   /// Creates a new [ScopedRef] which requires a context to access the instance.
+  ///
+  ///  -   Wrap your app or a subtree with a `LiteRefScope`:
+  ///
+  ///      ```dart
+  ///      runApp(
+  ///        LiteRefScope(
+  ///          child: MyApp(),
+  ///        ),
+  ///      );
+  ///      ```
+  ///
+  ///  -   Create a `ScopedRef`.
+  ///
+  ///      ```dart
+  ///      final settingsServiceRef = Ref.scoped((ctx) => SettingsService());
+  ///      ```
+  ///
+  ///  -   Access the instance in the current scope:
+  ///
+  ///      This can be done in a widget by using `settingsServiceRef.of(context)` or `settingsServiceRef(context)`.
+  ///
+  ///      ```dart
+  ///      class SettingsPage extends StatelessWidget {
+  ///        const SettingsPage({super.key});
+  ///
+  ///        @override
+  ///        Widget build(BuildContext context) {
+  ///          final settingsService = settingsServiceRef.of(context);
+  ///          return Text(settingsService.getThemeMode());
+  ///        }
+  ///      }
+  ///      ```
+  ///
+  ///  -   Override it for a subtree:
+  ///
+  ///      You can override the instance for a subtree by using `overrideWith`. This is useful for testing.
+  ///      In the example below, all calls to `settingsServiceRef.of(context)` will return `MockSettingsService`.
+  ///
+  ///      ```dart
+  ///      LiteRefScope(
+  ///          overrides: [
+  ///              settingsServiceRef.overrideWith((ctx) => MockSettingsService()),
+  ///          ]
+  ///          child: MyApp(),
+  ///          ),
+  ///      ```
   static ScopedRef<T> scoped<T>(
     CtxCreateFn<T> create, {
     DisposeFn<T>? dispose,

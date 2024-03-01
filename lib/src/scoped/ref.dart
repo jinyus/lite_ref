@@ -34,6 +34,18 @@ class ScopedRef<T> {
   }
 
   /// Returns the instance of [T] in the current scope.
+  ///
+  /// ```dart
+  /// class SettingsPage extends StatelessWidget {
+  ///   const SettingsPage({super.key});
+  ///
+  ///   @override
+  ///   Widget build(BuildContext context) {
+  ///     final settingsService = settingsServiceRef.of(context);
+  ///     return Text(settingsService.getThemeMode());
+  ///   }
+  /// }
+  /// ```
   T of(BuildContext context) {
     final box = LiteRefScope._of(context);
 
@@ -64,6 +76,14 @@ class ScopedRef<T> {
   /// Returns a new ScopedRef with a different [create] function.
   /// When used with a [LiteRefScope] overrides, any child widget that accesses
   /// the instance will use the new [create] function.
+  ///```dart
+  ///LiteRefScope(
+  ///    overrides: [
+  ///       settingsServiceRef.overrideWith((ctx) => MockSettingsService()),
+  ///    ]
+  ///    child: MyApp(),
+  ///    ),
+  ///```
   ScopedRef<T> overrideWith(CtxCreateFn<T> create) {
     return ScopedRef._(create, _id, dispose: _onDispose);
   }

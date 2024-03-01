@@ -1,3 +1,7 @@
+## 0.4.1
+
+-   [Docs] Add documentation comments and examples
+
 ## 0.4.0
 
 -   [Breaking] This now a flutter package

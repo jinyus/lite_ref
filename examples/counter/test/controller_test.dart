@@ -15,7 +15,7 @@ void main() {
     expect(emitted.value, [0, 1]);
   });
 
-  test('emits [-1] when incremented', () {
+  test('emits [-1] when decremented', () {
     final controller = Controller();
 
     expect(controller.count.value, 0);

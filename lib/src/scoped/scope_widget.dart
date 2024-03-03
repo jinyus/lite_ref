@@ -55,8 +55,10 @@ class _RefScopeElement extends InheritedElement {
     final existing = _autoDisposeBindings[element];
 
     if (existing != null) {
-      existing.add(ref);
+      final added = existing.add(ref);
+      if (added) ref._watchCount++;
     } else {
+      ref._watchCount++;
       // make this child widget depend on this element
       // so we get notified when it is deactivated
       element.dependOnInheritedElement(this);

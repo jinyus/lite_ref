@@ -45,6 +45,9 @@ class ScopedRef<T> {
 
   int _watchCount = 0;
 
+  /// The number of widgets that have access to the instance.
+  int get watchCount => _watchCount;
+
   final CtxCreateFn<T> _create;
 
   void _init(BuildContext context) {
@@ -75,12 +78,10 @@ class ScopedRef<T> {
     final existing = element._cache[_id];
 
     if (existing != null) {
+      if (autoDispose) {
+        element._addAutoDisposeBinding(context as Element, existing);
+      }
       return existing._instance as T;
-    }
-
-    if (autoDispose) {
-      _watchCount++;
-      element._addAutoDisposeBinding(context as Element, this);
     }
 
     final refOverride = element.box._overrides?.lookup(this);
@@ -88,7 +89,14 @@ class ScopedRef<T> {
     if (refOverride != null) {
       refOverride._init(context);
       element._cache[_id] = refOverride;
+      if (autoDispose) {
+        element._addAutoDisposeBinding(context as Element, refOverride);
+      }
       return refOverride._instance as T;
+    }
+
+    if (autoDispose) {
+      element._addAutoDisposeBinding(context as Element, this);
     }
 
     _init(context);

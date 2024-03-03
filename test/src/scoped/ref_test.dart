@@ -325,6 +325,70 @@ void main() {
       expect(resource.disposed, true);
     },
   );
+
+  testWidgets(
+    'should dispose correct instance when overriden',
+    (tester) async {
+      final resource = _Resource();
+      final resource2 = _Resource();
+      final countRef = Ref.scoped((ctx) => resource);
+      final countRef2 = countRef.overrideWith((_) => resource2);
+      final show = ValueNotifier(true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: ListenableBuilder(
+              listenable: show,
+              builder: (context, snapshot) {
+                return LiteRefScope(
+                  overrides: [countRef2],
+                  child: !show.value
+                      ? const Text('hidden')
+                      : Column(
+                          children: [
+                            Builder(
+                              builder: (context) {
+                                final val = countRef(context);
+                                return Text('${val.disposed}');
+                              },
+                            ),
+                            Builder(
+                              builder: (context) {
+                                final val = countRef(context);
+                                return Text('${val.disposed}');
+                              },
+                            ),
+                          ],
+                        ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('false'), findsExactly(2));
+
+      expect(resource.disposed, false);
+      expect(countRef.watchCount, 0);
+      expect(resource2.disposed, false);
+      expect(countRef2.watchCount, 2);
+
+      show.value = false;
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('hidden'), findsOneWidget);
+
+      expect(resource.disposed, false);
+      expect(countRef.watchCount, 0);
+      expect(resource2.disposed, true);
+      expect(countRef2.watchCount, 0);
+    },
+  );
 }
 
 class _Resource implements Disposable {

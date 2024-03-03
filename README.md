@@ -75,6 +75,10 @@ A `ScopedRef` is a reference that needs a build context to access its instance. 
         ),
     ```
 
+### Disposal
+
+When a `ScopedRef` provides a `ChangeNotifier`, `ValueNotifier` or a class that implements `Disposable`, it will automatically dispose the instance when all the widgets that have access to the instance are unmounted.
+
 ### Click [here](https://github.com/jinyus/lite_ref/tree/main/example/flutter_example) for a flutter example with testing.
 
 ## Global Singletons and Transients

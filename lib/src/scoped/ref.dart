@@ -139,6 +139,9 @@ class ScopedRef<T> {
     if (autoDispose && _onDispose == null) {
       if (_instance case final Disposable d) {
         d.dispose();
+      } else if (_instance case final ChangeNotifier c) {
+        // covers ChangeNotifier and ValueNotifier
+        c.dispose();
       }
     }
   }

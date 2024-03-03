@@ -397,6 +397,49 @@ void main() {
   );
 
   testWidgets(
+    'should dispose ValueNotifier when no dispose function is supplied',
+    (tester) async {
+      final vn = ValueNotifier(1);
+      final countRef = Ref.scoped((ctx) => vn);
+      final show = ValueNotifier(true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: ListenableBuilder(
+              listenable: show,
+              builder: (context, snapshot) {
+                if (!show.value) return const Text('hidden');
+                return Builder(
+                  builder: (context) {
+                    final val = countRef(context);
+                    return Text('${val.value}');
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('1'), findsOneWidget);
+
+      vn.addListener(() {}); // not disposed. ie: should not throw
+
+      show.value = false;
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('hidden'), findsOneWidget);
+
+      // should throw when disposed
+      expect(() => vn.addListener(() {}), throwsFlutterError);
+    },
+  );
+
+  testWidgets(
     'should dispose correct instance when overriden',
     (tester) async {
       final resource = _Resource();

@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:basic_interfaces/basic_interfaces.dart';
 import 'package:flutter/widgets.dart';
 
 part 'scope_widget.dart';

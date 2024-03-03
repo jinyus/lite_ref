@@ -11,21 +11,43 @@ typedef DisposeFn<T> = void Function(T);
 /// A [ScopedRef] is a reference that needs a context to access the instance.
 class ScopedRef<T> {
   ///  Creates a new [ScopedRef] which always return a new instance.
-  ScopedRef(CtxCreateFn<T> create, {DisposeFn<T>? dispose})
-      : _create = create,
+  /// If [autoDispose] is set to `true`, the instance will be disposed when
+  /// all the widgets that have access to the instance are unmounted.
+  ///
+  /// A [dispose] function does not have to be provided if [T] implements
+  /// [Disposable].
+  ///
+  /// If a [dispose] function is NOT provided and [T] doesn't implement
+  /// [Disposable], an attempt will be made to dispose the
+  /// instance using dynamic dispatch unless you set [autoDispose] to `false`.
+  ScopedRef(
+    CtxCreateFn<T> create, {
+    DisposeFn<T>? dispose,
+    this.autoDispose = true,
+  })  : _create = create,
         _onDispose = dispose,
         _id = Object();
 
-  ScopedRef._(CtxCreateFn<T> create, Object id, {DisposeFn<T>? dispose})
-      : _create = create,
+  ScopedRef._(
+    CtxCreateFn<T> create,
+    Object id, {
+    required this.autoDispose,
+    DisposeFn<T>? dispose,
+  })  : _create = create,
         _id = id,
         _onDispose = dispose;
 
   final Object _id;
 
-  DisposeFn<T>? _onDispose;
+  /// Whether the instance should be disposed when all the widgets that have
+  /// access to the instance are unmounted.
+  final bool autoDispose;
+
+  final DisposeFn<T>? _onDispose;
 
   T? _instance;
+
+  int _watchCount = 0;
 
   final CtxCreateFn<T> _create;
 
@@ -47,25 +69,35 @@ class ScopedRef<T> {
   /// }
   /// ```
   T of(BuildContext context) {
-    final box = LiteRefScope._of(context);
+    assert(
+      context is Element,
+      'This must be called with the context of a Widget.',
+    );
 
-    final existing = box._cache[_id];
+    final element = LiteRefScope._of(context);
+
+    final existing = element._cache[_id];
 
     if (existing != null) {
       return existing._instance as T;
     }
 
-    final refOverride = box._overrides?.lookup(this);
+    if (autoDispose) {
+      _watchCount++;
+      element._addAutoDisposeBinding(context as Element, this);
+    }
+
+    final refOverride = element.box._overrides?.lookup(this);
 
     if (refOverride != null) {
       refOverride._init(context);
-      box._cache[_id] = refOverride;
+      element._cache[_id] = refOverride;
       return refOverride._instance as T;
     }
 
     _init(context);
 
-    box._cache[_id] = this;
+    element._cache[_id] = this;
 
     return _instance as T;
   }
@@ -76,6 +108,10 @@ class ScopedRef<T> {
   /// Returns a new ScopedRef with a different [create] function.
   /// When used with a [LiteRefScope] overrides, any child widget that accesses
   /// the instance will use the new [create] function.
+  ///
+  /// Set [autoDispose] to `false` if you're overridding with an existing
+  /// instance and you don't want the instance to be disposed
+  /// when all the widgets that have access to it are unmounted.
   ///```dart
   ///LiteRefScope(
   ///    overrides: [
@@ -84,15 +120,25 @@ class ScopedRef<T> {
   ///    child: MyApp(),
   ///    ),
   ///```
-  ScopedRef<T> overrideWith(CtxCreateFn<T> create) {
-    return ScopedRef._(create, _id, dispose: _onDispose);
+  ScopedRef<T> overrideWith(CtxCreateFn<T> create, {bool autoDispose = true}) {
+    return ScopedRef._(
+      create,
+      _id,
+      dispose: _onDispose,
+      autoDispose: autoDispose,
+    );
   }
 
   void _dispose() {
     if (_instance == null) return;
     _onDispose?.call(_instance as T);
-    _instance = null;
-    _onDispose = null;
+    if (autoDispose && _onDispose == null) {
+      if (_instance case final Disposable d) {
+        d.dispose();
+      } else {
+        _tryDispose(_instance);
+      }
+    }
   }
 
   @override
@@ -105,4 +151,32 @@ class ScopedRef<T> {
 
   @override
   int get hashCode => _id.hashCode;
+}
+
+void _tryDispose(dynamic obj) {
+  runZonedGuarded(
+    // ignore: avoid_dynamic_calls
+    () => obj.dispose(),
+    (error, _) {
+      if (error is NoSuchMethodError) {
+        return;
+      }
+
+      //coverage:ignore-start
+
+      final errorStr = error.toString();
+
+      // for JS interop
+      if (errorStr.contains(r'dispose$0 is not a function')) {
+        return;
+      }
+
+      if (!errorStr.contains("has no instance method 'dispose'")) {
+        // ignore: only_throw_errors
+        throw error;
+      }
+
+      //coverage:ignore-end
+    },
+  );
 }

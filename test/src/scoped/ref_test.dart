@@ -191,6 +191,77 @@ void main() {
     expect(disposed, [2, 1]);
   });
 
+  testWidgets(
+      'should dispose ref when scope is unmounted when autodispose=false',
+      (tester) async {
+    final disposed = <int>[];
+    final countRef = Ref.scoped(
+      (ctx) => 1,
+      dispose: disposed.add,
+      autoDispose: false,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LiteRefScope(
+          child: Builder(
+            builder: (context) {
+              final val = countRef(context);
+              expect(val, 1);
+              return LiteRefScope(
+                overrides: [
+                  countRef.overrideWith((ctx) => 2),
+                ],
+                child: Builder(
+                  builder: (context) {
+                    final val = countRef(context);
+                    expect(val, 2);
+                    return Text('$val');
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('2'), findsOneWidget);
+
+    expect(disposed, isEmpty);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LiteRefScope(
+          child: Builder(
+            builder: (context) {
+              final val = countRef(context);
+              expect(val, 1);
+              return Text('$val');
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('1'), findsOneWidget);
+    expect(disposed, [2]); // overriden instance should be disposed
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Text(''),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(disposed, [2, 1]);
+  });
+
   testWidgets('should dispose when only child is unmounted', (tester) async {
     final disposed = <int>[];
     final countRef = Ref.scoped((ctx) => 1, dispose: disposed.add);

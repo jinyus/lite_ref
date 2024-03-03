@@ -61,8 +61,9 @@ abstract class Ref {
   static ScopedRef<T> scoped<T>(
     CtxCreateFn<T> create, {
     DisposeFn<T>? dispose,
+    bool autoDispose = true,
   }) {
-    return ScopedRef<T>(create, dispose: dispose);
+    return ScopedRef<T>(create, dispose: dispose, autoDispose: autoDispose);
   }
 
   /// Creates a new [SingletonRef] which always return the same instance.

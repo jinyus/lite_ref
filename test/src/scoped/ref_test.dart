@@ -502,6 +502,71 @@ void main() {
       expect(countRef2.watchCount, 0);
     },
   );
+
+  testWidgets(
+    'should get correct value when GlobalKey changes '
+    'causes it to move its position in the tree',
+    (tester) async {
+      final current = ValueNotifier(1);
+      final countRef = Ref.scoped((ctx) => 0);
+
+      final child = Builder(
+        key: GlobalKey(),
+        builder: (context) {
+          final val = countRef.of(context);
+          return Text('got: $val');
+        },
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Column(
+              children: [
+                ListenableBuilder(
+                  listenable: current,
+                  builder: (context, snapshot) {
+                    if (current.value != 1) {
+                      return const SizedBox.shrink();
+                    }
+                    return LiteRefScope(
+                      overrides: [
+                        countRef.overrideWith((_) => 1),
+                      ],
+                      child: Builder(
+                        builder: (context) => child,
+                      ),
+                    );
+                  },
+                ),
+                ListenableBuilder(
+                  listenable: current,
+                  builder: (context, snapshot) {
+                    if (current.value != 2) {
+                      return const SizedBox.shrink();
+                    }
+                    return LiteRefScope(
+                      overrides: [
+                        countRef.overrideWith((_) => 2),
+                      ],
+                      child: Builder(
+                        builder: (context) => child,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('got: 1'), findsOneWidget);
+      current.value = 2;
+      await tester.pumpAndSettle();
+      expect(find.text('got: 2'), findsOneWidget);
+    },
+  );
 }
 
 class _Resource implements Disposable {

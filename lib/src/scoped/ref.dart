@@ -16,10 +16,6 @@ class ScopedRef<T> {
   ///
   /// A [dispose] function does not have to be provided if [T] implements
   /// [Disposable].
-  ///
-  /// If a [dispose] function is NOT provided and [T] doesn't implement
-  /// [Disposable], an attempt will be made to dispose the
-  /// instance using dynamic dispatch unless you set [autoDispose] to `false`.
   ScopedRef(
     CtxCreateFn<T> create, {
     DisposeFn<T>? dispose,
@@ -135,8 +131,6 @@ class ScopedRef<T> {
     if (autoDispose && _onDispose == null) {
       if (_instance case final Disposable d) {
         d.dispose();
-      } else {
-        _tryDispose(_instance);
       }
     }
   }
@@ -151,32 +145,4 @@ class ScopedRef<T> {
 
   @override
   int get hashCode => _id.hashCode;
-}
-
-void _tryDispose(dynamic obj) {
-  runZonedGuarded(
-    // ignore: avoid_dynamic_calls
-    () => obj.dispose(),
-    (error, _) {
-      if (error is NoSuchMethodError) {
-        return;
-      }
-
-      //coverage:ignore-start
-
-      final errorStr = error.toString();
-
-      // for JS interop
-      if (errorStr.contains(r'dispose$0 is not a function')) {
-        return;
-      }
-
-      if (!errorStr.contains("has no instance method 'dispose'")) {
-        // ignore: only_throw_errors
-        throw error;
-      }
-
-      //coverage:ignore-end
-    },
-  );
 }

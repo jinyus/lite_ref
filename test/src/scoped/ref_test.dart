@@ -287,7 +287,7 @@ void main() {
   testWidgets(
     'should dispose Disposable when no dispose function is supplied',
     (tester) async {
-      final resource = Resource();
+      final resource = _Resource();
       final countRef = Ref.scoped((ctx) => resource);
       final show = ValueNotifier(true);
 
@@ -327,7 +327,7 @@ void main() {
   );
 }
 
-class Resource implements Disposable {
+class _Resource implements Disposable {
   bool disposed = false;
 
   @override

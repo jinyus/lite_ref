@@ -11,9 +11,7 @@ class LiteRefScope extends InheritedWidget {
     List<ScopedRef<dynamic>>? overrides,
   }) : _overrides = overrides?.toSet();
 
-  /// The [ScopedRef]s that are overridden by this [LiteRefScope].
   final Set<ScopedRef<dynamic>>? _overrides;
-  late final _cache = _Cache();
 
   // coverage:ignore-start
   @override
@@ -21,16 +19,14 @@ class LiteRefScope extends InheritedWidget {
   // coverage:ignore-end
 
   @override
-  InheritedElement createElement() => _Element(this);
+  InheritedElement createElement() => _RefScopeElement(this);
 
-  static LiteRefScope? _maybeOf(BuildContext context) {
+  static _RefScopeElement _of(BuildContext context) {
     final element =
         context.getElementForInheritedWidgetOfExactType<LiteRefScope>();
-    return element is _Element ? element.box : null;
-  }
 
-  static Never _notFound() {
-    throw StateError(
+    assert(
+      element != null,
       '''
   You must wrap your app with a `LiteRefScope`.
 
@@ -41,24 +37,61 @@ class LiteRefScope extends InheritedWidget {
   );
   ''',
     );
-  }
 
-  static LiteRefScope _of(BuildContext context) =>
-      _maybeOf(context) ?? _notFound();
+    return element! as _RefScopeElement;
+  }
 }
 
-class _Element extends InheritedElement {
-  _Element(LiteRefScope super.widget);
+class _RefScopeElement extends InheritedElement {
+  _RefScopeElement(LiteRefScope super.widget);
 
   LiteRefScope get box => widget as LiteRefScope;
 
+  late final _cache = _Cache();
+
+  late final _autoDisposeBindings = <Element, Set<ScopedRef<dynamic>>>{};
+
+  void _addAutoDisposeBinding(Element element, ScopedRef<dynamic> ref) {
+    final existing = _autoDisposeBindings[element];
+
+    if (existing != null) {
+      final added = existing.add(ref);
+      if (added) ref._watchCount++;
+    } else {
+      ref._watchCount++;
+      // make this child widget depend on this element
+      // so we get notified when it is deactivated
+      element.dependOnInheritedElement(this);
+      _autoDisposeBindings[element] = {ref};
+    }
+  }
+
+  @override
+  void removeDependent(Element dependent) {
+    // child has been removed
+    final refs = _autoDisposeBindings.remove(dependent) ?? const {};
+
+    for (final ref in refs.toList()) {
+      if (ref.autoDispose) {
+        ref._watchCount--;
+        if (ref._watchCount < 1) {
+          ref._dispose();
+          _cache.remove(ref._id);
+        }
+      }
+    }
+
+    super.removeDependent(dependent);
+  }
+
   @override
   void unmount() {
-    for (final ref in box._cache.values) {
+    for (final ref in _cache.values) {
       ref._dispose();
     }
-    box._cache.clear();
+    _cache.clear();
     box._overrides?.clear();
+    _autoDisposeBindings.clear();
     super.unmount();
   }
 }

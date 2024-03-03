@@ -1,3 +1,4 @@
+import 'package:basic_interfaces/basic_interfaces.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lite_ref/lite_ref.dart';
@@ -51,7 +52,7 @@ void main() {
           home: Builder(
             builder: (context) {
               // This should trigger the error
-              expect(() => countRef(context), throwsStateError);
+              expect(() => countRef(context), throwsA(isA<AssertionError>()));
               return const SizedBox.shrink();
             },
           ),
@@ -189,4 +190,283 @@ void main() {
 
     expect(disposed, [2, 1]);
   });
+
+  testWidgets(
+      'should dispose ref when scope is unmounted when autodispose=false',
+      (tester) async {
+    final disposed = <int>[];
+    final countRef = Ref.scoped(
+      (ctx) => 1,
+      dispose: disposed.add,
+      autoDispose: false,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LiteRefScope(
+          child: Builder(
+            builder: (context) {
+              final val = countRef(context);
+              expect(val, 1);
+              return LiteRefScope(
+                overrides: [
+                  countRef.overrideWith((ctx) => 2),
+                ],
+                child: Builder(
+                  builder: (context) {
+                    final val = countRef(context);
+                    expect(val, 2);
+                    return Text('$val');
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('2'), findsOneWidget);
+
+    expect(disposed, isEmpty);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LiteRefScope(
+          child: Builder(
+            builder: (context) {
+              final val = countRef(context);
+              expect(val, 1);
+              return Text('$val');
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('1'), findsOneWidget);
+    expect(disposed, [2]); // overriden instance should be disposed
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Text(''),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(disposed, [2, 1]);
+  });
+
+  testWidgets('should dispose when only child is unmounted', (tester) async {
+    final disposed = <int>[];
+    final countRef = Ref.scoped((ctx) => 1, dispose: disposed.add);
+    final show = ValueNotifier(true);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LiteRefScope(
+          child: ListenableBuilder(
+            listenable: show,
+            builder: (context, snapshot) {
+              if (!show.value) return const Text('hidden');
+              return Builder(
+                builder: (context) {
+                  final val = countRef(context);
+                  expect(val, 1);
+                  return Text('$val');
+                },
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('1'), findsOneWidget);
+
+    expect(disposed, isEmpty);
+
+    show.value = false;
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('hidden'), findsOneWidget);
+
+    expect(disposed, [1]);
+  });
+
+  testWidgets('should dispose when all children are unmounted', (tester) async {
+    final disposed = <int>[];
+    final countRef = Ref.scoped((ctx) => 1, dispose: disposed.add);
+    final amount = ValueNotifier(3);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LiteRefScope(
+          child: ListenableBuilder(
+            listenable: amount,
+            builder: (context, snapshot) {
+              return Column(
+                children: [
+                  const SizedBox.shrink(),
+                  for (var i = 0; i < amount.value; i++)
+                    Builder(
+                      builder: (context) {
+                        final val = countRef(context);
+                        expect(val, 1);
+                        return Text('$val');
+                      },
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('1'), findsExactly(amount.value));
+
+    expect(disposed, isEmpty);
+
+    amount.value = 2;
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('1'), findsExactly(amount.value));
+
+    expect(disposed, isEmpty); // still has listeners
+
+    amount.value = 0;
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('1'), findsNothing);
+
+    expect(disposed, [1]); // dispose when all children are unmounted
+  });
+
+  testWidgets(
+    'should dispose Disposable when no dispose function is supplied',
+    (tester) async {
+      final resource = _Resource();
+      final countRef = Ref.scoped((ctx) => resource);
+      final show = ValueNotifier(true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: ListenableBuilder(
+              listenable: show,
+              builder: (context, snapshot) {
+                if (!show.value) return const Text('hidden');
+                return Builder(
+                  builder: (context) {
+                    final val = countRef(context);
+                    return Text('${val.disposed}');
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('false'), findsOneWidget);
+
+      expect(resource.disposed, false);
+
+      show.value = false;
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('hidden'), findsOneWidget);
+
+      expect(resource.disposed, true);
+    },
+  );
+
+  testWidgets(
+    'should dispose correct instance when overriden',
+    (tester) async {
+      final resource = _Resource();
+      final resource2 = _Resource();
+      final countRef = Ref.scoped((ctx) => resource);
+      final countRef2 = countRef.overrideWith((_) => resource2);
+      final show = ValueNotifier(true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: ListenableBuilder(
+              listenable: show,
+              builder: (context, snapshot) {
+                return LiteRefScope(
+                  overrides: [countRef2],
+                  child: !show.value
+                      ? const Text('hidden')
+                      : Column(
+                          children: [
+                            Builder(
+                              builder: (context) {
+                                final val = countRef(context);
+                                return Text('${val.disposed}');
+                              },
+                            ),
+                            Builder(
+                              builder: (context) {
+                                final val = countRef(context);
+                                return Text('${val.disposed}');
+                              },
+                            ),
+                          ],
+                        ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('false'), findsExactly(2));
+
+      expect(resource.disposed, false);
+      expect(countRef.watchCount, 0);
+      expect(resource2.disposed, false);
+      expect(countRef2.watchCount, 2);
+
+      show.value = false;
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('hidden'), findsOneWidget);
+
+      expect(resource.disposed, false);
+      expect(countRef.watchCount, 0);
+      expect(resource2.disposed, true);
+      expect(countRef2.watchCount, 0);
+    },
+  );
+}
+
+class _Resource implements Disposable {
+  bool disposed = false;
+
+  @override
+  void dispose() {
+    disposed = true;
+  }
 }

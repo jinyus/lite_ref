@@ -30,8 +30,8 @@ jobs:
 
             - name: Build and Test
               run: |
+                  rm -rf examples 
                   flutter pub get
-                  flutter pub get -C example/flutter_example/
                   flutter analyze
                   flutter test --coverage
 

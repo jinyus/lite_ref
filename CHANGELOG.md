@@ -1,3 +1,7 @@
+## 0.5.1
+
+-   [Fix] Remove `dispose` function when overriding with `autoDispose` set to `false`.
+
 ## 0.5.0
 
 -   [Feat] Add autodipose for `ChangeNotifiers` and any class that implements `Disposable`. These classes will be disposed when all the widgets that have access to the instance are unmounted. If providing a existing and you don't want the instance to be disposed set `autoDispose` to `false`.

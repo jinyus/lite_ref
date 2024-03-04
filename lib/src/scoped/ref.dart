@@ -128,7 +128,7 @@ class ScopedRef<T> {
     return ScopedRef._(
       create,
       _id,
-      dispose: _onDispose,
+      dispose: autoDispose ? _onDispose : null,
       autoDispose: autoDispose,
     );
   }

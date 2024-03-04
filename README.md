@@ -79,6 +79,42 @@ A `ScopedRef` is a reference that needs a build context to access its instance. 
 
 When a `ScopedRef` provides a `ChangeNotifier`, `ValueNotifier` or a class that implements `Disposable`, it will automatically dispose the instance when all the widgets that have access to the instance are unmounted.
 
+In the example below, the `CounterController` will be disposed when the `CounterView` is unmounted.
+
+```dart
+class CounterController extends ChangeNotifier {
+  var _count = 0;
+  int get count => _count;
+
+  void increment() {
+    _count++;
+    notifyListeners();
+  }
+
+  void decrement() {
+    _count--;
+    notifyListeners();
+  }
+}
+
+final countControllerRef = Ref.scoped((ctx) => CounterController());
+
+class CounterView extends StatelessWidget {
+  const CounterView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: countControllerRef.of(context),
+      builder: (context, snapshot) {
+        final count = countControllerRef(context).count;
+        return Text('$count');
+      },
+    );
+  }
+}
+```
+
 ### Click [here](https://github.com/jinyus/lite_ref/tree/main/example/flutter_example) for a flutter example with testing.
 
 ## Global Singletons and Transients

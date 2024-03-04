@@ -6,3 +6,4 @@
 build/
 pubspec.lock
 coverage/
+demo.dart

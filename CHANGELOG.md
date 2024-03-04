@@ -1,3 +1,43 @@
+## 0.5.0
+
+-   [Feat] Add autodipose for `ChangeNotifiers` and any class that implements `Disposable`. These classes will be disposed when all the widgets that have access to the instance are unmounted. If providing a existing and you don't want the instance to be disposed set `autoDispose` to `false`.
+
+    In the example below, the `CounterController` will be disposed when the `CounterView` is unmounted.
+
+    ```dart
+    class CounterController extends ChangeNotifier {
+    var _count = 0;
+    int get count => _count;
+
+    void increment() {
+        _count++;
+        notifyListeners();
+    }
+
+    void decrement() {
+        _count--;
+        notifyListeners();
+    }
+    }
+
+    final countControllerRef = Ref.scoped((ctx) => CounterController());
+
+    class CounterView extends StatelessWidget {
+    const CounterView({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        final contoller = countControllerRef.of(context);
+        return ListenableBuilder(
+        listenable: contoller,
+        builder: (context, snapshot) {
+            return Text('${contoller.count}');
+        },
+        );
+    }
+    }
+    ```
+
 ## 0.4.1
 
 -   [Docs] Add documentation comments and examples

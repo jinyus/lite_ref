@@ -104,11 +104,11 @@ class CounterView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final contoller = countControllerRef.of(context);
     return ListenableBuilder(
-      listenable: countControllerRef.of(context),
+      listenable: contoller,
       builder: (context, snapshot) {
-        final count = countControllerRef(context).count;
-        return Text('$count');
+        return Text('${contoller.count}');
       },
     );
   }

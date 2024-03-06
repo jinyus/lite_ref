@@ -65,6 +65,8 @@ abstract class Ref {
     return ScopedRef<T>(create, dispose: dispose, autoDispose: autoDispose);
   }
 
+  // coverage:ignore-start
+  // tested in lite_ref_core
   /// Creates a new [SingletonRef] which always return the same instance.
   static SingletonRef<T> singleton<T>(T Function() create) {
     return SingletonRef<T>(create);
@@ -88,4 +90,5 @@ abstract class Ref {
   ) {
     return AsyncTransientRef<T>(create);
   }
+  // coverage:ignore-end
 }

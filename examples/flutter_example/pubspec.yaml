@@ -10,7 +10,7 @@ dependencies:
     flutter:
         sdk: flutter
     lite_ref:
-        path: ../../
+        path: ../../packages/lite_ref
 
 dev_dependencies:
     flutter_test:

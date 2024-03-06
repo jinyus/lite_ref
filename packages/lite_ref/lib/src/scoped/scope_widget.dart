@@ -69,9 +69,13 @@ class _RefScopeElement extends InheritedElement {
   @override
   void removeDependent(Element dependent) {
     // child has been removed
-    final refs = _autoDisposeBindings.remove(dependent) ?? const {};
+    final refs = _autoDisposeBindings.remove(dependent);
 
-    for (final ref in refs.toList()) {
+    // coverage:ignore-start
+    if (refs == null) return super.removeDependent(dependent);
+    // coverage:ignore-end
+
+    for (final ref in refs) {
       if (ref.autoDispose) {
         ref._watchCount--;
         if (ref._watchCount < 1) {

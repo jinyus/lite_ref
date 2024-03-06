@@ -28,7 +28,14 @@ jobs:
 
             - uses: subosito/flutter-action@v2
 
-            - name: Build and Test
+            - name: Build and Test Core
+              working-directory: packages/lite_ref_core
+              run: |
+                  flutter pub get
+                  flutter analyze
+                  flutter test --coverage
+
+            - name: Build and Test Flutter
               working-directory: packages/lite_ref
               run: |
                   flutter pub get
@@ -40,5 +47,5 @@ jobs:
               env:
                   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
               with:
-                  files: ./coverage/lcov.info
+                  files: ./packages/lite_ref/coverage/lcov.info
                   flags: unittests

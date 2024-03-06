@@ -12,14 +12,15 @@ test_target() {
 
     if [ "$1" == "core" ]; then
         echo "testing core"
+        cd packages/lite_ref_core &&
+            flutter test --coverage --timeout 5s
+    elif [ "$1" == "flutter" ]; then
+        echo "testing flutter"
         cd packages/lite_ref &&
             flutter test --coverage --timeout 5s
-    elif [ "$1" == "beacon" ]; then
-        echo "testing beacon"
-        cd packages/lite_ref_beacon &&
-            flutter test --coverage --timeout 5s
     elif [ "$1" == "all" ]; then
-        test_target "core"
+        test_target "core" &&
+            test_target "flutter"
     else
         echo -e "unknown test \"$1\" \nValid tests are: core, all"
     fi
@@ -29,11 +30,11 @@ publish_target() {
     cp README.md packages/lite_ref/README.md &&
         if [ "$1" == "core" ]; then
             echo "publishing core"
-            cd packages/lite_ref &&
+            cd packages/lite_ref_core &&
                 dart pub publish
-        elif [ "$1" == "beacon" ]; then
-            echo "publishing beacon"
-            cd packages/lite_ref_beacon &&
+        elif [ "$1" == "flutter" ]; then
+            echo "publishing flutter"
+            cd packages/lite_ref &&
                 dart pub publish
         else
             echo -e "unknown package \"$1\" \nValid packages are: core, flutter, lint"

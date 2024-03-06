@@ -11,6 +11,7 @@ dependencies:
     basic_interfaces: ^1.0.4
     flutter:
         sdk: flutter
+    lite_ref_core: ^0.1.0
 
 dev_dependencies:
     flutter_test:

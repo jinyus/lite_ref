@@ -1,8 +1,7 @@
 // ignore_for_file: lines_longer_than_80_chars
 
-import 'package:lite_ref/src/async/async.dart';
 import 'package:lite_ref/src/scoped/scoped.dart';
-import 'package:lite_ref/src/sync/sync.dart';
+import 'package:lite_ref_core/lite_ref_core.dart';
 
 /// abstract class for creating refs.
 /// ```dart
@@ -66,6 +65,8 @@ abstract class Ref {
     return ScopedRef<T>(create, dispose: dispose, autoDispose: autoDispose);
   }
 
+  // coverage:ignore-start
+  // tested in lite_ref_core
   /// Creates a new [SingletonRef] which always return the same instance.
   static SingletonRef<T> singleton<T>(T Function() create) {
     return SingletonRef<T>(create);
@@ -89,4 +90,5 @@ abstract class Ref {
   ) {
     return AsyncTransientRef<T>(create);
   }
+  // coverage:ignore-end
 }

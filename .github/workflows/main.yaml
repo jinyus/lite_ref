@@ -29,8 +29,8 @@ jobs:
             - uses: subosito/flutter-action@v2
 
             - name: Build and Test
+              working-directory: packages/lite_ref
               run: |
-                  rm -rf examples 
                   flutter pub get
                   flutter analyze
                   flutter test --coverage

@@ -10,7 +10,7 @@ dependencies:
     flutter:
         sdk: flutter
     lite_ref:
-        path: ../../
+        path: ../../packages/lite_ref
     state_beacon: ^0.39.1
 
 dev_dependencies:

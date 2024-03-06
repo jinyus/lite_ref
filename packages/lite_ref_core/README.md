@@ -1,62 +1,82 @@
-# Lite Ref Core
+<p align="center">
+  <img width="500" src="https://github.com/jinyus/lite_ref/blob/main/assets/lite_ref_banner.jpg?raw=true">
+</p>
 
-[![style: very good analysis][very_good_analysis_badge]][very_good_analysis_link]
-[![Powered by Mason](https://img.shields.io/endpoint?url=https%3A%2F%2Ftinyurl.com%2Fmason-badge)](https://github.com/felangel/mason)
-[![License: MIT][license_badge]][license_link]
+<p align="center">
+  <img src="https://img.shields.io/badge/license-MIT-purple"> 
+  <a href="https://app.codecov.io/github/jinyus/lite_ref"><img src="https://img.shields.io/codecov/c/github/jinyus/lite_ref"></a>
+  <a href="https://pub.dev/packages/lite_ref"><img src="https://img.shields.io/pub/points/lite_ref?color=blue"></a>
+</p>
 
-A Very Good Project created by Very Good CLI.
+## Overview
 
-## Installation 💻
+Lite Ref is a lightweight dependency injection library for Dart and Flutter.
 
-**❗ In order to start using Lite Ref Core you must have the [Dart SDK][dart_install_link] installed on your machine.**
+## Installation
 
-Install via `dart pub add`:
-
-```sh
-dart pub add lite_ref_core
+```bash
+dart pub add lite_ref
 ```
 
----
+## Why Lite Ref?
 
-## Continuous Integration 🤖
+-   **Fast**: Doesn't use hashmaps to store instances so it's faster than _all_ other DI libraries.
+-   **Safe**: Uses top level variables so it's impossible to get a NOT_FOUND error.
+-   **Lightweight**: Has no dependencies.
+-   **Simple**: Easy to learn with a small API surface:
 
-Lite Ref Core comes with a built-in [GitHub Actions workflow][github_actions_link] powered by [Very Good Workflows][very_good_workflows_link] but you can also add your preferred CI/CD solution.
+    -   Create a singleton:
 
-Out of the box, on each pull request and push, the CI `formats`, `lints`, and `tests` the code. This ensures the code remains consistent and behaves correctly as you add functionality or make changes. The project uses [Very Good Analysis][very_good_analysis_link] for a strict set of analysis options used by our team. Code coverage is enforced using the [Very Good Workflows][very_good_coverage_link].
+        ```dart
+        final dbRef = Ref.singleton(() => Database());
 
----
+        assert(dbRef.instance == dbRef.instance);
+        ```
 
-## Running Tests 🧪
+    -   Use it:
 
-To run all unit tests:
+        ```dart
+        final db = dbRef.instance; // or dbRef()
+        ```
 
-```sh
-dart pub global activate coverage 1.2.0
-dart test --coverage=coverage
-dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info
-```
+    -   Override it (for testing):
 
-To view the generated coverage report you can use [lcov](https://github.com/linux-test-project/lcov).
+        ```dart
+        dbRef.overrideWith(() => MockDatabase());
+        ```
 
-```sh
-# Generate Coverage Report
-genhtml coverage/lcov.info -o coverage/
+    -   Freeze it (disable overriding):
 
-# Open Coverage Report
-open coverage/index.html
-```
+        ```dart
+        // overrideWith is marked as @visibleForTesting so this isn't really necessary.
+        dbRef.freeze();
+        ```
 
-[dart_install_link]: https://dart.dev/get-dart
-[github_actions_link]: https://docs.github.com/en/actions/learn-github-actions
-[license_badge]: https://img.shields.io/badge/license-MIT-blue.svg
-[license_link]: https://opensource.org/licenses/MIT
-[logo_black]: https://raw.githubusercontent.com/VGVentures/very_good_brand/main/styles/README/vgv_logo_black.png#gh-light-mode-only
-[logo_white]: https://raw.githubusercontent.com/VGVentures/very_good_brand/main/styles/README/vgv_logo_white.png#gh-dark-mode-only
-[mason_link]: https://github.com/felangel/mason
-[very_good_analysis_badge]: https://img.shields.io/badge/style-very_good_analysis-B22C89.svg
-[very_good_analysis_link]: https://pub.dev/packages/very_good_analysis
-[very_good_coverage_link]: https://github.com/marketplace/actions/very-good-coverage
-[very_good_ventures_link]: https://verygood.ventures
-[very_good_ventures_link_light]: https://verygood.ventures#gh-light-mode-only
-[very_good_ventures_link_dark]: https://verygood.ventures#gh-dark-mode-only
-[very_good_workflows_link]: https://github.com/VeryGoodOpenSource/very_good_workflows
+    -   Create a transient instance (always return new instance):
+
+        ```dart
+        final dbRef = Ref.transient(() => Database());
+
+        assert(dbRef.instance != dbRef.instance);
+        ```
+
+    -   Create a singleton asynchronously:
+
+        ```dart
+        final dbRef = Ref.asyncSingleton(() async => await Database.init());
+        ```
+
+    -   Use it:
+
+        ```dart
+        final db = await dbRef.instance;
+        ```
+
+    -   Use it synchronously:
+
+        ```dart
+        // only use this if you know the instance is already created
+        final db = dbRef.assertInstance;
+        ```
+
+### Click [here](https://github.com/jinyus/lite_ref/tree/main/example/flutter_example) for a flutter example with testing.

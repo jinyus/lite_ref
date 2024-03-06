@@ -1,7 +1,7 @@
 // ignore_for_file: prefer_const_constructors, cascade_invocations
 
-import 'package:flutter_test/flutter_test.dart';
-import 'package:lite_ref/lite_ref.dart';
+import 'package:lite_ref_core/lite_ref_core.dart';
+import 'package:test/test.dart';
 
 import '../common.dart';
 

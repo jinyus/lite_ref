@@ -2,7 +2,6 @@
 library lite_ref;
 
 export 'package:basic_interfaces/basic_interfaces.dart';
-export 'src/async/async.dart';
+export 'package:lite_ref_core/lite_ref_core.dart' hide Ref;
 export 'src/ref.dart';
 export 'src/scoped/scoped.dart';
-export 'src/sync/sync.dart';

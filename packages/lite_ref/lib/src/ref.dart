@@ -1,8 +1,7 @@
 // ignore_for_file: lines_longer_than_80_chars
 
-import 'package:lite_ref/src/async/async.dart';
 import 'package:lite_ref/src/scoped/scoped.dart';
-import 'package:lite_ref/src/sync/sync.dart';
+import 'package:lite_ref_core/lite_ref_core.dart';
 
 /// abstract class for creating refs.
 /// ```dart

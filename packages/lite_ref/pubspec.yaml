@@ -17,3 +17,8 @@ dev_dependencies:
     flutter_test:
         sdk: flutter
     very_good_analysis: ^5.1.0
+
+topics:
+    - dependency-injection
+    - provider
+    - di

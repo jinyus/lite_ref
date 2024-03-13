@@ -1,3 +1,7 @@
+## 0.6.0
+
+-   Update flutter dependency constraint
+
 ## 0.5.2
 
 -   [Refactor] Add core package as a dependency.

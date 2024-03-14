@@ -54,6 +54,19 @@ class ScopedRef<T> {
     _instance = _create(context);
   }
 
+  /// Returns `true` if this [ScopedRef] is iniitalized
+  /// in the current [LiteRefScope].
+  bool exists(BuildContext context) {
+    assert(
+      context is Element,
+      'This must be called with the context of a Widget.',
+    );
+
+    final element = LiteRefScope._of(context);
+
+    return element._cache.containsKey(_id);
+  }
+
   /// Returns the instance of [T] in the current scope.
   ///
   /// ```dart

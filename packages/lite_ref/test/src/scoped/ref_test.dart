@@ -567,6 +567,56 @@ void main() {
       expect(find.text('got: 2'), findsOneWidget);
     },
   );
+  testWidgets(
+    'should return true if the ScopedRef is '
+    'initialized in the current LiteRefScope',
+    (tester) async {
+      final countRef = Ref.scoped((ctx) => 1);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                final initialized = countRef.exists(context);
+                expect(initialized, false);
+
+                final val = countRef.of(context);
+                expect(val, 1);
+
+                final initialized2 = countRef.exists(context);
+                expect(initialized2, true);
+
+                return LiteRefScope(
+                  overrides: [
+                    countRef.overrideWith((ctx) => 2),
+                  ],
+                  child: Builder(
+                    builder: (context) {
+                      final initialized = countRef.exists(context);
+                      expect(initialized, false);
+
+                      final val = countRef.of(context);
+                      expect(val, 2);
+
+                      final initialized2 = countRef.exists(context);
+                      expect(initialized2, true);
+
+                      return Text('$val');
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('2'), findsOneWidget);
+    },
+  );
 }
 
 class _Resource implements Disposable {

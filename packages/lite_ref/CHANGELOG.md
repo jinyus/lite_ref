@@ -1,3 +1,7 @@
+## 0.6.1
+
+-   [Feat] Add `ScopedRef.exists(context)` method to check if a ScopedRef is initialized in the current LiteRefScope.
+
 ## 0.6.0
 
 -   Update flutter dependency constraint

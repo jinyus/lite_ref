@@ -5,13 +5,19 @@ typedef _Cache = Map<Object, ScopedRef<dynamic>>;
 /// Dependency injection of [ScopedRef]s.
 class LiteRefScope extends InheritedWidget {
   /// Create a new [LiteRefScope]
+  /// If [onlyOverrides] is true, only overridden
+  /// ScopedRefs will be provided to children.
   LiteRefScope({
     required super.child,
     super.key,
     List<ScopedRef<dynamic>>? overrides,
+    this.onlyOverrides = false,
   }) : _overrides = overrides?.toSet();
 
   final Set<ScopedRef<dynamic>>? _overrides;
+
+  /// If true, only overridden ScopedRefs will be provided to children.
+  final bool onlyOverrides;
 
   // coverage:ignore-start
   @override

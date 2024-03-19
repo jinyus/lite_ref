@@ -617,6 +617,112 @@ void main() {
       expect(find.text('2'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'should dispose when all children are unmounted and it is read in parent',
+    (tester) async {
+      final disposed = <int>[];
+      final countRef = Ref.scoped((ctx) => 1, dispose: disposed.add);
+      final amount = ValueNotifier(3);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Column(
+              children: [
+                Builder(
+                  builder: (context) {
+                    return Text('read ${countRef.read(context)}');
+                  },
+                ),
+                ListenableBuilder(
+                  listenable: amount,
+                  builder: (context, snapshot) {
+                    return Column(
+                      children: [
+                        const SizedBox.shrink(),
+                        for (var i = 0; i < amount.value; i++)
+                          Builder(
+                            builder: (context) {
+                              final val = countRef(context);
+                              expect(val, 1);
+                              return Text('$val');
+                            },
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('1'), findsExactly(amount.value));
+      expect(find.text('read 1'), findsOneWidget);
+
+      expect(disposed, isEmpty);
+
+      amount.value = 2;
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('1'), findsExactly(amount.value));
+
+      expect(disposed, isEmpty); // still has listeners
+
+      amount.value = 0;
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('1'), findsNothing);
+
+      expect(disposed, [1]); // dispose when all children are unmounted
+      expect(find.text('read 1'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'should NOT dispose when scope is unmounted and only access was a "read"',
+    (tester) async {
+      final disposed = <int>[];
+      final countRef = Ref.scoped((ctx) => 1, dispose: disposed.add);
+      final show = ValueNotifier(true);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: ValueListenableBuilder(
+              valueListenable: show,
+              builder: (__, value, _) {
+                if (!value) return const SizedBox.shrink();
+                return Builder(
+                  builder: (context) {
+                    final val = countRef.read(context);
+                    expect(val, 1);
+                    return Text('$val');
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('1'), findsOneWidget);
+      expect(disposed, isEmpty); // overriden instance should be disposed
+
+      show.value = false;
+
+      await tester.pumpAndSettle();
+
+      expect(disposed, isEmpty);
+    },
+  );
 }
 
 class _Resource implements Disposable {

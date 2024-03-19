@@ -723,6 +723,95 @@ void main() {
       expect(disposed, isEmpty);
     },
   );
+
+  testWidgets(
+    'should throw when the scope is marked as onlyOverrides',
+    (tester) async {
+      final countRef = Ref.scoped((ctx) => 1);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            onlyOverrides: true,
+            child: Builder(
+              builder: (context) {
+                late final val = countRef(context);
+                expect(() => val, throwsException);
+                return const Text('1');
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('1'), findsOneWidget);
+    },
+  );
+
+  testWidgets('should fetch from the closest scope', (tester) async {
+    final resourceRef = Ref.scoped((ctx) => _Resource());
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LiteRefScope(
+          child: Builder(
+            builder: (context) {
+              final val = resourceRef(context);
+              expect(val.disposed, false);
+              val.disposed = true;
+              return LiteRefScope(
+                onlyOverrides: true,
+                overrides: [resourceRef.overrideWith((ctx) => _Resource())],
+                child: Builder(
+                  builder: (context) {
+                    final val2 = resourceRef(context);
+                    expect(val2.disposed, false);
+                    return Text('${val2.disposed}');
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('false'), findsOneWidget);
+  });
+
+  testWidgets(
+    'should fetch from the parent scope when the '
+    'closest scope is marked as onlyOverrides',
+    (tester) async {
+      final resourceRef = Ref.scoped((ctx) => _Resource());
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                final val = resourceRef(context);
+                expect(val.disposed, false);
+                val.disposed = true;
+                return LiteRefScope(
+                  onlyOverrides: true,
+                  child: Builder(
+                    builder: (context) {
+                      final val = resourceRef(context);
+                      expect(val.disposed, true);
+                      return Text('${val.disposed}');
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('true'), findsOneWidget);
+    },
+  );
 }
 
 class _Resource implements Disposable {

@@ -27,7 +27,7 @@ class LiteRefScope extends InheritedWidget {
   @override
   InheritedElement createElement() => _RefScopeElement(this);
 
-  static _RefScopeElement _of(BuildContext context, Object id) {
+  static _RefScopeElement _of(BuildContext context, ScopedRef<dynamic> ref) {
     final element =
         context.getElementForInheritedWidgetOfExactType<LiteRefScope>();
 
@@ -46,11 +46,11 @@ class LiteRefScope extends InheritedWidget {
 
     final refScopeElement = element! as _RefScopeElement;
 
-    // if the element's widget is onlyOverride, we need to check if the id
+    // if the element's widget is onlyOverride, we need to check if the ref
     // is in the overrides list, if not, we need to visit all ancestors
-    // until we find an element with the id or one that is not onlyOverride
+    // until we find an element with the ref or one that is not onlyOverride
     if (refScopeElement.box.onlyOverrides) {
-      if (refScopeElement.box._overrides?.contains(id) ?? false) {
+      if (refScopeElement.box._overrides?.contains(ref) ?? false) {
         return refScopeElement;
       }
 
@@ -62,7 +62,7 @@ class LiteRefScope extends InheritedWidget {
             newElement = element;
             return false;
           }
-          if (element.box._overrides?.contains(id) ?? false) {
+          if (element.box._overrides?.contains(ref) ?? false) {
             newElement = element;
             return false;
           }
@@ -72,8 +72,8 @@ class LiteRefScope extends InheritedWidget {
 
       if (newElement == null) {
         throw Exception(
-          'Could not find a LiteRefScope with the'
-          ' instance or one that is not marked as onlyOverride',
+          'Could not find a LiteRefScope with "$ref"'
+          ' or one that is not marked as onlyOverride',
         );
       }
 

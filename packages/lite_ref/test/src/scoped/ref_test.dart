@@ -686,42 +686,43 @@ void main() {
   );
 
   testWidgets(
-      'should NOT dispose ref when scope is unmounted and only access was a "read"',
-      (tester) async {
-    final disposed = <int>[];
-    final countRef = Ref.scoped((ctx) => 1, dispose: disposed.add);
-    final show = ValueNotifier(true);
-    await tester.pumpWidget(
-      MaterialApp(
-        home: LiteRefScope(
-          child: ValueListenableBuilder(
-            valueListenable: show,
-            builder: (__, value, _) {
-              if (!value) return const SizedBox.shrink();
-              return Builder(
-                builder: (context) {
-                  final val = countRef.read(context);
-                  expect(val, 1);
-                  return Text('$val');
-                },
-              );
-            },
+    'should NOT dispose when scope is unmounted and only access was a "read"',
+    (tester) async {
+      final disposed = <int>[];
+      final countRef = Ref.scoped((ctx) => 1, dispose: disposed.add);
+      final show = ValueNotifier(true);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: ValueListenableBuilder(
+              valueListenable: show,
+              builder: (__, value, _) {
+                if (!value) return const SizedBox.shrink();
+                return Builder(
+                  builder: (context) {
+                    final val = countRef.read(context);
+                    expect(val, 1);
+                    return Text('$val');
+                  },
+                );
+              },
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    expect(find.text('1'), findsOneWidget);
-    expect(disposed, isEmpty); // overriden instance should be disposed
+      expect(find.text('1'), findsOneWidget);
+      expect(disposed, isEmpty); // overriden instance should be disposed
 
-    show.value = false;
+      show.value = false;
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    expect(disposed, isEmpty);
-  });
+      expect(disposed, isEmpty);
+    },
+  );
 }
 
 class _Resource implements Disposable {

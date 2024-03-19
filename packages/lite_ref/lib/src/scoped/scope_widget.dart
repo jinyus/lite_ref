@@ -7,6 +7,9 @@ class LiteRefScope extends InheritedWidget {
   /// Create a new [LiteRefScope]
   /// If [onlyOverrides] is true, only overridden
   /// ScopedRefs will be provided to children.
+  ///
+  /// If [onlyOverrides] is true, only overridden
+  /// ScopedRefs will be provided to children.
   LiteRefScope({
     required super.child,
     super.key,

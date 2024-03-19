@@ -779,6 +779,44 @@ void main() {
     expect(find.text('false'), findsOneWidget);
   });
 
+  testWidgets('should fetch from the closest scope/2', (tester) async {
+    final resourceRef = Ref.scoped((ctx) => _Resource());
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LiteRefScope(
+          child: Builder(
+            builder: (context) {
+              final val = resourceRef(context);
+              expect(val.disposed, false);
+              val.disposed = true;
+              return LiteRefScope(
+                onlyOverrides: true,
+                overrides: [resourceRef.overrideWith((ctx) => _Resource())],
+                child: Builder(
+                  builder: (context) {
+                    return LiteRefScope(
+                      onlyOverrides: true,
+                      child: Builder(
+                        builder: (context) {
+                          final val2 = resourceRef(context);
+                          expect(val2.disposed, false);
+                          return Text('${val2.disposed}');
+                        },
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('false'), findsOneWidget);
+  });
+
   testWidgets(
     'should fetch from the parent scope when the '
     'closest scope is marked as onlyOverrides',

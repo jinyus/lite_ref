@@ -69,6 +69,9 @@ class ScopedRef<T> {
 
   /// Returns the instance of [T] in the current scope.
   ///
+  /// If [listen] is `false`, theinstance will not be disposed when the widget
+  /// is unmounted.
+  ///
   /// ```dart
   /// class SettingsPage extends StatelessWidget {
   ///   const SettingsPage({super.key});
@@ -80,7 +83,7 @@ class ScopedRef<T> {
   ///   }
   /// }
   /// ```
-  T of(BuildContext context) {
+  T of(BuildContext context, {bool listen = true}) {
     assert(
       context is Element,
       'This must be called with the context of a Widget.',
@@ -90,10 +93,14 @@ class ScopedRef<T> {
 
     final existing = element._cache[_id];
 
-    if (existing != null) {
-      if (autoDispose) {
-        element._addAutoDisposeBinding(context as Element, existing);
+    void autoDisposeIfNeeded(ScopedRef<dynamic> ref) {
+      if (autoDispose && listen) {
+        element._addAutoDisposeBinding(context as Element, ref);
       }
+    }
+
+    if (existing != null) {
+      autoDisposeIfNeeded(existing);
       return existing._instance as T;
     }
 
@@ -102,21 +109,26 @@ class ScopedRef<T> {
     if (refOverride != null) {
       refOverride._init(context);
       element._cache[_id] = refOverride;
-      if (autoDispose) {
-        element._addAutoDisposeBinding(context as Element, refOverride);
-      }
+      autoDisposeIfNeeded(refOverride);
       return refOverride._instance as T;
     }
 
-    if (autoDispose) {
-      element._addAutoDisposeBinding(context as Element, this);
-    }
+    autoDisposeIfNeeded(this);
 
     _init(context);
 
     element._cache[_id] = this;
 
     return _instance as T;
+  }
+
+  /// Returns the instance of [T] in the current scope without disposing it
+  /// when the widget is unmounted. This should be used in callbacks like
+  /// `onPressed` or `onTap`.
+  ///
+  /// Alias for `of(context, listen: false)`.
+  T read(BuildContext context) {
+    return of(context, listen: false);
   }
 
   /// Equivalent to calling the [of(context)] getter.

@@ -52,35 +52,33 @@ class LiteRefScope extends InheritedWidget {
     // if the element's widget is onlyOverride, we need to check if the ref
     // is in the overrides list, if not, we need to visit all ancestors
     // until we find an element with the ref or one that is not onlyOverride
-    if (refScopeElement.box.onlyOverrides) {
-      if (refScopeElement.box._overrides?.contains(ref) ?? false) {
+    if (refScopeElement.scope.onlyOverrides) {
+      if (refScopeElement.scope._overrides?.contains(ref) ?? false) {
         return refScopeElement;
       }
 
-      _RefScopeElement? newElement;
+      var parentElement = refScopeElement._parent;
 
-      context.visitAncestorElements((element) {
-        if (element is _RefScopeElement) {
-          if (!element.box.onlyOverrides) {
-            newElement = element;
-            return false;
-          }
-          if (element.box._overrides?.contains(ref) ?? false) {
-            newElement = element;
-            return false;
-          }
+      while (parentElement != null) {
+        if (!parentElement.scope.onlyOverrides) break;
+
+        if (parentElement.scope._overrides?.contains(ref) ?? false) {
+          break;
         }
-        return true;
-      });
 
-      if (newElement == null) {
+        parentElement = parentElement._parent;
+      }
+
+      if (parentElement == null) {
         throw Exception(
-          'Could not find a LiteRefScope with "$ref"'
-          ' or one that is not marked as onlyOverride',
+          'Could not find a LiteRefScope with "${ref.runtimeType}" '
+          'or one that is not marked as onlyOverride. '
+          'Please note that "onlyOverride" must be false '
+          'for the root LiteRefScope',
         );
       }
 
-      return newElement!;
+      return parentElement;
     }
 
     return refScopeElement;
@@ -90,7 +88,9 @@ class LiteRefScope extends InheritedWidget {
 class _RefScopeElement extends InheritedElement {
   _RefScopeElement(LiteRefScope super.widget);
 
-  LiteRefScope get box => widget as LiteRefScope;
+  _RefScopeElement? _parent;
+
+  LiteRefScope get scope => widget as LiteRefScope;
 
   late final _cache = _Cache();
 
@@ -109,6 +109,13 @@ class _RefScopeElement extends InheritedElement {
       element.dependOnInheritedElement(this);
       _autoDisposeBindings[element] = {ref};
     }
+  }
+
+  @override
+  void mount(Element? parent, Object? newSlot) {
+    _parent = parent?.getElementForInheritedWidgetOfExactType<LiteRefScope>()
+        as _RefScopeElement?;
+    super.mount(parent, newSlot);
   }
 
   @override
@@ -139,7 +146,7 @@ class _RefScopeElement extends InheritedElement {
       ref._dispose();
     }
     _cache.clear();
-    box._overrides?.clear();
+    scope._overrides?.clear();
     _autoDisposeBindings.clear();
     super.unmount();
   }

@@ -5,13 +5,22 @@ typedef _Cache = Map<Object, ScopedRef<dynamic>>;
 /// Dependency injection of [ScopedRef]s.
 class LiteRefScope extends InheritedWidget {
   /// Create a new [LiteRefScope]
+  /// If [onlyOverrides] is true, only overridden
+  /// ScopedRefs will be provided to children.
+  ///
+  /// If [onlyOverrides] is true, only overridden
+  /// ScopedRefs will be provided to children.
   LiteRefScope({
     required super.child,
     super.key,
     List<ScopedRef<dynamic>>? overrides,
+    this.onlyOverrides = false,
   }) : _overrides = overrides?.toSet();
 
   final Set<ScopedRef<dynamic>>? _overrides;
+
+  /// If true, only overridden ScopedRefs will be provided to children.
+  final bool onlyOverrides;
 
   // coverage:ignore-start
   @override
@@ -21,7 +30,7 @@ class LiteRefScope extends InheritedWidget {
   @override
   InheritedElement createElement() => _RefScopeElement(this);
 
-  static _RefScopeElement _of(BuildContext context) {
+  static _RefScopeElement _of(BuildContext context, ScopedRef<dynamic> ref) {
     final element =
         context.getElementForInheritedWidgetOfExactType<LiteRefScope>();
 
@@ -38,7 +47,43 @@ class LiteRefScope extends InheritedWidget {
   ''',
     );
 
-    return element! as _RefScopeElement;
+    final refScopeElement = element! as _RefScopeElement;
+
+    // if the element's widget is onlyOverride, we need to check if the ref
+    // is in the overrides list, if not, we need to visit all ancestors
+    // until we find an element with the ref or one that is not onlyOverride
+    if (refScopeElement.box.onlyOverrides) {
+      if (refScopeElement.box._overrides?.contains(ref) ?? false) {
+        return refScopeElement;
+      }
+
+      _RefScopeElement? newElement;
+
+      context.visitAncestorElements((element) {
+        if (element is _RefScopeElement) {
+          if (!element.box.onlyOverrides) {
+            newElement = element;
+            return false;
+          }
+          if (element.box._overrides?.contains(ref) ?? false) {
+            newElement = element;
+            return false;
+          }
+        }
+        return true;
+      });
+
+      if (newElement == null) {
+        throw Exception(
+          'Could not find a LiteRefScope with "$ref"'
+          ' or one that is not marked as onlyOverride',
+        );
+      }
+
+      return newElement!;
+    }
+
+    return refScopeElement;
   }
 }
 

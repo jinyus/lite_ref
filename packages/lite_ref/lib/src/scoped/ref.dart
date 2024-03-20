@@ -62,7 +62,7 @@ class ScopedRef<T> {
       'This must be called with the context of a Widget.',
     );
 
-    final element = LiteRefScope._of(context);
+    final element = LiteRefScope._of(context, this);
 
     return element._cache.containsKey(_id);
   }
@@ -89,7 +89,7 @@ class ScopedRef<T> {
       'This must be called with the context of a Widget.',
     );
 
-    final element = LiteRefScope._of(context);
+    final element = LiteRefScope._of(context, this);
 
     final existing = element._cache[_id];
 

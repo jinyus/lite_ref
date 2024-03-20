@@ -104,7 +104,7 @@ class ScopedRef<T> {
       return existing._instance as T;
     }
 
-    final refOverride = element.box._overrides?.lookup(this);
+    final refOverride = element.scope._overrides?.lookup(this);
 
     if (refOverride != null) {
       refOverride._init(context);

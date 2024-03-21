@@ -1,3 +1,7 @@
+## 0.6.2
+
+-   [Feat] Add `onlyOverrides` to `LiteRefScope` which will only provide overridden instances to children.
+
 ## 0.6.1
 
 -   [Feat] Add `ScopedRef.exists(context)` method to check if a ScopedRef is initialized in the current LiteRefScope.

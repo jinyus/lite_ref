@@ -97,7 +97,15 @@ packages:
       path: "../../packages/lite_ref"
       relative: true
     source: path
-    version: "0.5.1"
+    version: "0.6.3"
+  lite_ref_core:
+    dependency: transitive
+    description:
+      name: lite_ref_core
+      sha256: b902af6b90736d6fb7a2c171af37d15f4894a5880e9eb55ffb3fee5f01385849
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.1"
   matcher:
     dependency: transitive
     description:
@@ -233,4 +241,4 @@ packages:
     version: "13.0.0"
 sdks:
   dart: ">=3.2.0-0 <4.0.0"
-  flutter: ">=3.10.0"
+  flutter: ">=3.17.0-1.0.pre.38"

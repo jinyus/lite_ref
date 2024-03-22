@@ -1,3 +1,7 @@
+## 0.6.3
+
+-   [Refactor] minor refactor
+
 ## 0.6.2
 
 -   [Feat] Add `onlyOverrides` to `LiteRefScope` which will only provide overridden instances to children.

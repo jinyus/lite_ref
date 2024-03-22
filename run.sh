@@ -44,8 +44,6 @@ publish_target() {
 deps() {
     cd $CURRENT_DIR/packages/lite_ref &&
         flutter pub get &&
-        cd $CURRENT_DIR/packages/lite_ref_beacon &&
-        flutter pub get &&
         cd $CURRENT_DIR/examples/counter &&
         flutter pub get &&
         cd $CURRENT_DIR/examples/flutter_example &&

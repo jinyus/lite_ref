@@ -148,6 +148,7 @@ class _RefScopeElement extends InheritedElement {
     _cache.clear();
     scope._overrides?.clear();
     _autoDisposeBindings.clear();
+    _parent = null;
     super.unmount();
   }
 }

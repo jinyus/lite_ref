@@ -10,14 +10,15 @@ class LiteRefScope extends InheritedWidget {
   ///
   /// If [onlyOverrides] is true, only overridden
   /// ScopedRefs will be provided to children.
-  LiteRefScope({
+  const LiteRefScope({
     required super.child,
     super.key,
-    List<ScopedRef<dynamic>>? overrides,
+    this.overrides,
     this.onlyOverrides = false,
-  }) : _overrides = overrides?.toSet();
+  });
 
-  final Set<ScopedRef<dynamic>>? _overrides;
+  /// List of ScopedRefs to override.
+  final Set<ScopedRef<dynamic>>? overrides;
 
   /// If true, only overridden ScopedRefs will be provided to children.
   final bool onlyOverrides;
@@ -53,7 +54,7 @@ class LiteRefScope extends InheritedWidget {
     // is in the overrides list, if not, we need to visit all ancestors
     // until we find an element with the ref or one that is not onlyOverride
     if (refScopeElement.scope.onlyOverrides) {
-      if (refScopeElement.scope._overrides?.contains(ref) ?? false) {
+      if (refScopeElement.scope.overrides?.contains(ref) ?? false) {
         return refScopeElement;
       }
 
@@ -62,7 +63,7 @@ class LiteRefScope extends InheritedWidget {
       while (parentElement != null) {
         if (!parentElement.scope.onlyOverrides) break;
 
-        if (parentElement.scope._overrides?.contains(ref) ?? false) {
+        if (parentElement.scope.overrides?.contains(ref) ?? false) {
           break;
         }
 
@@ -120,22 +121,25 @@ class _RefScopeElement extends InheritedElement {
 
   @override
   void removeDependent(Element dependent) {
-    // child has been removed
-    final refs = _autoDisposeBindings.remove(dependent);
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (dependent.mounted) return;
+      // child has been removed
+      final refs = _autoDisposeBindings.remove(dependent);
 
-    // coverage:ignore-start
-    if (refs == null) return super.removeDependent(dependent);
-    // coverage:ignore-end
+      // coverage:ignore-start
+      if (refs == null) return;
+      // coverage:ignore-end
 
-    for (final ref in refs) {
-      if (ref.autoDispose) {
-        ref._watchCount--;
-        if (ref._watchCount < 1) {
-          ref._dispose();
-          _cache.remove(ref._id);
+      for (final ref in refs) {
+        if (ref.autoDispose) {
+          ref._watchCount--;
+          if (ref._watchCount < 1) {
+            ref._dispose();
+            _cache.remove(ref._id);
+          }
         }
       }
-    }
+    });
 
     super.removeDependent(dependent);
   }
@@ -146,7 +150,7 @@ class _RefScopeElement extends InheritedElement {
       ref._dispose();
     }
     _cache.clear();
-    scope._overrides?.clear();
+    scope.overrides?.clear();
     _autoDisposeBindings.clear();
     _parent = null;
     super.unmount();

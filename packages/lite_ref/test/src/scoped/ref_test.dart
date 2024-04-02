@@ -72,9 +72,9 @@ void main() {
               val = countRef(context);
               expect(val, 1);
               return LiteRefScope(
-                overrides: [
+                overrides: {
                   countRef.overrideWith((ctx) => 2),
-                ],
+                },
                 child: Column(
                   children: [
                     Text('$val'),
@@ -137,9 +137,9 @@ void main() {
               final val = countRef(context);
               expect(val, 1);
               return LiteRefScope(
-                overrides: [
+                overrides: {
                   countRef.overrideWith((ctx) => 2),
-                ],
+                },
                 child: Builder(
                   builder: (context) {
                     final val = countRef(context);
@@ -208,9 +208,9 @@ void main() {
               final val = countRef(context);
               expect(val, 1);
               return LiteRefScope(
-                overrides: [
+                overrides: {
                   countRef.overrideWith((ctx) => 2),
-                ],
+                },
                 child: Builder(
                   builder: (context) {
                     final val = countRef(context);
@@ -455,7 +455,7 @@ void main() {
               listenable: show,
               builder: (context, snapshot) {
                 return LiteRefScope(
-                  overrides: [countRef2],
+                  overrides: {countRef2},
                   child: !show.value
                       ? const Text('hidden')
                       : Column(
@@ -530,9 +530,9 @@ void main() {
                       return const SizedBox.shrink();
                     }
                     return LiteRefScope(
-                      overrides: [
+                      overrides: {
                         countRef.overrideWith((_) => 1),
-                      ],
+                      },
                       child: Builder(
                         builder: (context) => child,
                       ),
@@ -546,9 +546,9 @@ void main() {
                       return const SizedBox.shrink();
                     }
                     return LiteRefScope(
-                      overrides: [
+                      overrides: {
                         countRef.overrideWith((_) => 2),
-                      ],
+                      },
                       child: Builder(
                         builder: (context) => child,
                       ),
@@ -588,9 +588,9 @@ void main() {
                 expect(initialized2, true);
 
                 return LiteRefScope(
-                  overrides: [
+                  overrides: {
                     countRef.overrideWith((ctx) => 2),
-                  ],
+                  },
                   child: Builder(
                     builder: (context) {
                       final initialized = countRef.exists(context);
@@ -761,7 +761,7 @@ void main() {
               val.disposed = true;
               return LiteRefScope(
                 onlyOverrides: true,
-                overrides: [resourceRef.overrideWith((ctx) => _Resource())],
+                overrides: {resourceRef.overrideWith((ctx) => _Resource())},
                 child: Builder(
                   builder: (context) {
                     final val2 = resourceRef(context);
@@ -792,7 +792,7 @@ void main() {
               val.disposed = true;
               return LiteRefScope(
                 onlyOverrides: true,
-                overrides: [resourceRef.overrideWith((ctx) => _Resource())],
+                overrides: {resourceRef.overrideWith((ctx) => _Resource())},
                 child: Builder(
                   builder: (context) {
                     return LiteRefScope(
@@ -830,7 +830,7 @@ void main() {
               val.disposed = true;
               return LiteRefScope(
                 onlyOverrides: true,
-                overrides: [resourceRef.overrideWith((ctx) => _Resource())],
+                overrides: {resourceRef.overrideWith((ctx) => _Resource())},
                 child: Builder(
                   builder: (context) {
                     return LiteRefScope(

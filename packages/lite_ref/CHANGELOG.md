@@ -1,3 +1,30 @@
+## 0.7.0
+
+-   [Fix] Fixed bug where refs were disposed when the child is temporarily deactivated.
+-   [Breaking] The `overrides` property of `LiteRefScope` is now a Set of `ScopedRef`s instead of a List of `ScopedRef`s.
+
+    ### Before
+
+    ```dart
+    LiteRefScope(
+    overrides: [
+        settingsServiceRef.overrideWith((ctx) => MockSettingsService()),
+    ]
+    child: MyApp(),
+    )
+    ```
+
+    ### After:
+
+    ```dart
+    LiteRefScope(
+    overrides: {
+        settingsServiceRef.overrideWith((ctx) => MockSettingsService()),
+    }
+    child: MyApp(),
+    )
+    ```
+
 ## 0.6.3
 
 -   [Refactor] minor refactor

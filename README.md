@@ -68,9 +68,9 @@ A `ScopedRef` is a reference that needs a build context to access its instance. 
 
     ```dart
     LiteRefScope(
-        overrides: [
+        overrides: {
             settingsServiceRef.overrideWith((ctx) => MockSettingsService()),
-        ]
+        }
         child: MyApp(),
         ),
     ```

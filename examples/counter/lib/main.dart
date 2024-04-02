@@ -16,7 +16,7 @@ class Controller {
 final countControllerRef = Ref.scoped((ctx) => Controller());
 
 void main() {
-  runApp(LiteRefScope(child: const MyApp()));
+  runApp(const LiteRefScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

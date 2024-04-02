@@ -4,7 +4,7 @@ import 'package:flutter_example/settings/view.dart';
 import 'package:lite_ref/lite_ref.dart';
 
 void main(List<String> args) {
-  runApp(LiteRefScope(child: const MyApp()));
+  runApp(const LiteRefScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

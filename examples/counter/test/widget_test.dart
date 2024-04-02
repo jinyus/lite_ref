@@ -12,9 +12,9 @@ extension PumpApp on WidgetTester {
   Future<void> pumpApp(MockCounterController controller) {
     return pumpWidget(
       LiteRefScope(
-        overrides: [
+        overrides: {
           countControllerRef.overrideWith((_) => controller),
-        ],
+        },
         child: const MyApp(),
       ),
     );

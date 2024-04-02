@@ -34,10 +34,10 @@ void main() {
     // Build our app and trigger a frame.
     await tester.pumpWidget(
       LiteRefScope(
-        overrides: [
+        overrides: {
           settingsServiceRef.overrideWith((_) => mockSettingsService),
           settingsControllerRef.overrideWith((_) => mockSettingsController),
-        ],
+        },
         child: const MyApp(),
       ),
     );

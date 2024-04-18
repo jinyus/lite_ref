@@ -1,6 +1,6 @@
 part of 'scoped.dart';
 
-typedef _Cache = Map<Object, ScopedRef<dynamic>>;
+typedef _Cache = Map<Object, ScopedObject<dynamic>>;
 
 /// Dependency injection of [ScopedRef]s.
 class LiteRefScope extends InheritedWidget {
@@ -18,7 +18,7 @@ class LiteRefScope extends InheritedWidget {
   });
 
   /// List of ScopedRefs to override.
-  final Set<ScopedRef<dynamic>>? overrides;
+  final Set<IScopedRef<dynamic>>? overrides;
 
   /// If true, only overridden ScopedRefs will be provided to children.
   final bool onlyOverrides;
@@ -31,7 +31,7 @@ class LiteRefScope extends InheritedWidget {
   @override
   InheritedElement createElement() => _RefScopeElement(this);
 
-  static _RefScopeElement _of(BuildContext context, ScopedRef<dynamic> ref) {
+  static _RefScopeElement _of(BuildContext context, IScopedRef<dynamic> ref) {
     final element =
         context.getElementForInheritedWidgetOfExactType<LiteRefScope>();
 
@@ -95,9 +95,9 @@ class _RefScopeElement extends InheritedElement {
 
   late final _cache = _Cache();
 
-  late final _autoDisposeBindings = <Element, Set<ScopedRef<dynamic>>>{};
+  late final _autoDisposeBindings = <Element, Set<ScopedObject<dynamic>>>{};
 
-  void _addAutoDisposeBinding(Element element, ScopedRef<dynamic> ref) {
+  void _addAutoDisposeBinding(Element element, ScopedObject<dynamic> ref) {
     final existing = _autoDisposeBindings[element];
 
     if (existing != null) {

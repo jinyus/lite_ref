@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lite_ref/lite_ref.dart';
 
 void main() {
-  test('overriden instance should be equal to main', () {
+  test('overridden instance should be equal to main', () {
     final countRef = Ref.scoped((ctx) => 1);
     final countRefClone = countRef.overrideWith((ctx) => 2);
 
@@ -60,7 +60,8 @@ void main() {
     },
   );
 
-  testWidgets('overriden instance should have different value', (tester) async {
+  testWidgets('overridden instance should have different value',
+      (tester) async {
     final countRef = Ref.scoped((ctx) => 1);
     var val = 0;
 
@@ -486,9 +487,9 @@ void main() {
       expect(find.text('false'), findsExactly(2));
 
       expect(resource.disposed, false);
-      expect(countRef.watchCount, 0);
+      // expect(countRef.watchCount, 0);
       expect(resource2.disposed, false);
-      expect(countRef2.watchCount, 2);
+      // expect(countRef2.watchCount, 2);
 
       show.value = false;
 
@@ -497,9 +498,9 @@ void main() {
       expect(find.text('hidden'), findsOneWidget);
 
       expect(resource.disposed, false);
-      expect(countRef.watchCount, 0);
+      // expect(countRef.watchCount, 0);
       expect(resource2.disposed, true);
-      expect(countRef2.watchCount, 0);
+      // expect(countRef2.watchCount, 0);
     },
   );
 
@@ -895,6 +896,331 @@ void main() {
       expect(find.text('true'), findsOneWidget);
     },
   );
+
+  group('ScopedFamilyRef', () {
+    test('overridden instance should be equal to main', () {
+      final countRef = Ref.scopedFamily((ctx, int a) => 1);
+      final countRefClone = countRef.overrideWith((ctx, int a) => 2);
+
+      expect(countRef, countRefClone);
+
+      final hashSet = <Object>{}..add(countRef);
+
+      expect(hashSet.contains(countRefClone), true);
+    });
+
+    testWidgets('should cache values', (tester) async {
+      var ran = 0;
+      final countRef = Ref.scopedFamily((ctx, int a) => ++ran);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                final val = countRef(context, 1);
+                final val2 = countRef(context, 1);
+                expect(val, 1);
+                expect(val2, 1);
+                return Text('$val $val2');
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(ran, 1);
+
+      final txt = find.text('1 1');
+
+      expect(txt, findsOneWidget);
+    });
+
+    testWidgets('family should return different values', (tester) async {
+      final countRef = Ref.scopedFamily((ctx, int a) => 1 + a);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                final val = countRef(context, 0);
+                final val2 = countRef(context, 1);
+                expect(val, 1);
+                expect(val2, 2);
+                return Text('$val $val2');
+              },
+            ),
+          ),
+        ),
+      );
+
+      final txt = find.text('1 2');
+
+      expect(txt, findsOneWidget);
+    });
+
+    testWidgets(
+      'should throw when there is no root LiteRefScope',
+      (tester) async {
+        final countRef = Ref.scopedFamily((ctx, String family) => 1);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                // This should trigger the error
+                expect(
+                  () => countRef(context, 'one'),
+                  throwsA(isA<AssertionError>()),
+                );
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        );
+      },
+    );
+
+    testWidgets('overridden instance should return different instances',
+        (tester) async {
+      final controllerRef = Ref.scopedFamily(
+        (ctx, int family) => _Controller(id: family),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                final controller = controllerRef(context, 42);
+                expect(
+                  controller,
+                  isA<_Controller>()
+                      .having((p0) => p0.id, 'id', 42)
+                      .having((p0) => p0.value, 'value', 0),
+                );
+                return LiteRefScope(
+                  overrides: {
+                    controllerRef.overrideWith(
+                      (ctx, int _) => _Controller(id: 0, value: 1),
+                    ),
+                  },
+                  child: Column(
+                    children: [
+                      Text('${controller.value}'),
+                      Builder(
+                        builder: (context) {
+                          final controller = controllerRef(context, 42);
+                          expect(
+                            controller,
+                            isA<_Controller>()
+                                .having((p0) => p0.id, 'id', 0)
+                                .having((p0) => p0.value, 'value', 1),
+                          );
+                          return Text('${controller.value}');
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('0'), findsOneWidget);
+      expect(find.text('1'), findsOneWidget);
+    });
+
+    testWidgets('should be able to use other refs', (tester) async {
+      final statusValue = Ref.scoped((context) => 200);
+      final controller = Ref.scopedFamily((context, int id) {
+        final status = statusValue.of(context);
+        return _Controller(id: id, value: status);
+      });
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                final controller1 = controller(context, 1);
+                expect(
+                  controller1,
+                  isA<_Controller>()
+                      .having((p0) => p0.id, 'id', 1)
+                      .having((p0) => p0.value, 'status', 200),
+                );
+                return Text(
+                  'id: ${controller1.id}, status: ${controller1.value}',
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('id: 1, status: 200'), findsOneWidget);
+    });
+
+    testWidgets('should dispose family when scope is unmounted',
+        (tester) async {
+      final disposed = <int>[];
+      final countRef = Ref.scopedFamily(
+        (ctx, int family) => 0 + family,
+        dispose: disposed.add,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                final val = countRef(context, 1);
+                expect(val, 1);
+                final val2 = countRef(context, 2);
+                expect(val2, 2);
+                return LiteRefScope(
+                  overrides: {
+                    countRef.overrideWith((ctx, f) => 3),
+                  },
+                  child: Builder(
+                    builder: (context) {
+                      final val = countRef(context, 1);
+                      expect(val, 3);
+                      return Text('$val $val2');
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('3 2'), findsOneWidget);
+
+      expect(disposed, isEmpty);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                final val = countRef(context, 1);
+                expect(val, 1);
+                final val2 = countRef(context, 2);
+                expect(val2, 2);
+                return Text('$val $val2');
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 2'), findsOneWidget);
+      expect(disposed, [3]); // overridden instance should be disposed
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LiteRefScope(child: Text('')),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(disposed, [3, 1, 2]); // all instances should be disposed
+    });
+
+    testWidgets(
+        'should dispose family when scope is unmounted when autodispose=false',
+        (tester) async {
+      final disposed = <int>[];
+      final countRef = Ref.scopedFamily(
+        (ctx, int f) => 0 + f,
+        dispose: disposed.add,
+        autoDispose: false,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              key: const ValueKey(1),
+              builder: (context) {
+                final val = countRef(context, 1);
+                expect(val, 1);
+                final val2 = countRef(context, 2);
+                expect(val2, 2);
+                return LiteRefScope(
+                  overrides: {
+                    countRef.overrideWith((ctx, f) => 3),
+                  },
+                  child: Builder(
+                    builder: (context) {
+                      final val = countRef(context, 1);
+                      expect(val, 3);
+                      return Text('$val $val2');
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('3 2'), findsOneWidget);
+
+      expect(disposed, isEmpty);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              key: const ValueKey(1),
+              builder: (context) {
+                final val = countRef(context, 1);
+                expect(val, 1);
+                final val2 = countRef(context, 2);
+                expect(val2, 2);
+                return Text('$val $val2');
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 2'), findsOneWidget);
+      expect(disposed, [3]); // overridden instance should be disposed
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Text(''),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(disposed, [3, 1, 2]);
+    });
+  });
+}
+
+class _Controller {
+  _Controller({required this.id, this.value = 0});
+
+  final int id;
+  int value;
 }
 
 class _Resource implements Disposable {

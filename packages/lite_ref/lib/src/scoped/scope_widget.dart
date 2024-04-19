@@ -131,11 +131,13 @@ class _RefScopeElement extends InheritedElement {
     super.deactivate();
   }
 
+// coverage:ignore-start
   @override
   void activate() {
     super.activate();
     _oldRefs.clear();
   }
+// coverage:ignore-end
 
   @override
   void removeDependent(Element dependent) {

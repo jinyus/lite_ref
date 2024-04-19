@@ -97,7 +97,7 @@ packages:
       path: "../../packages/lite_ref"
       relative: true
     source: path
-    version: "0.7.0"
+    version: "0.8.0"
   lite_ref_core:
     dependency: transitive
     description:

@@ -1,15 +1,8 @@
-// ignore_for_file: avoid_equals_and_hash_code_on_mutable_classes
-
 part of 'scoped.dart';
 
-/// The function used to create an instance of [T].
-typedef CtxCreateFn<T> = T Function(BuildContext);
-
-/// The function called when the [ScopedRef] is disposed.
-typedef DisposeFn<T> = void Function(T);
-
 /// A [ScopedRef] is a reference that needs a context to access the instance.
-class ScopedRef<T> {
+@immutable
+class ScopedRef<T> implements IScopedRef<T> {
   ///  Creates a new [ScopedRef] which always return a new instance.
   /// If [autoDispose] is set to `true`, the instance will be disposed when
   /// all the widgets that have access to the instance are unmounted.
@@ -24,7 +17,7 @@ class ScopedRef<T> {
         _onDispose = dispose,
         _id = Object();
 
-  ScopedRef._(
+  const ScopedRef._(
     CtxCreateFn<T> create,
     Object id, {
     required this.autoDispose,
@@ -37,24 +30,24 @@ class ScopedRef<T> {
 
   /// Whether the instance should be disposed when all the widgets that have
   /// access to the instance are unmounted.
+  @override
   final bool autoDispose;
 
   final DisposeFn<T>? _onDispose;
 
-  T? _instance;
-
-  int _watchCount = 0;
-
-  /// The number of widgets that have access to the instance.
-  int get watchCount => _watchCount;
-
   final CtxCreateFn<T> _create;
 
-  void _init(BuildContext context) {
-    _instance = _create(context);
+  ScopedObject<T> _createRefObject(BuildContext context) {
+    final refObject = ScopedObject<T>(
+      id: _id,
+      dispose: _onDispose,
+      instance: _create(context),
+      autoDispose: autoDispose,
+    );
+    return refObject;
   }
 
-  /// Returns `true` if this [ScopedRef] is iniitalized
+  /// Returns `true` if this [ScopedRef] is initialized
   /// in the current [LiteRefScope].
   bool exists(BuildContext context) {
     assert(
@@ -69,7 +62,7 @@ class ScopedRef<T> {
 
   /// Returns the instance of [T] in the current scope.
   ///
-  /// If [listen] is `false`, theinstance will not be disposed when the widget
+  /// If [listen] is `false`, the instance will not be disposed when the widget
   /// is unmounted.
   ///
   /// ```dart
@@ -93,7 +86,7 @@ class ScopedRef<T> {
 
     final existing = element._cache[_id];
 
-    void autoDisposeIfNeeded(ScopedRef<dynamic> ref) {
+    void autoDisposeIfNeeded(ScopedObject<dynamic> ref) {
       if (autoDispose && listen) {
         element._addAutoDisposeBinding(context as Element, ref);
       }
@@ -107,19 +100,19 @@ class ScopedRef<T> {
     final refOverride = element.scope.overrides?.lookup(this);
 
     if (refOverride != null) {
-      refOverride._init(context);
-      element._cache[_id] = refOverride;
-      autoDisposeIfNeeded(refOverride);
-      return refOverride._instance as T;
+      final refObject = (refOverride as ScopedRef)._createRefObject(context);
+      element._cache[refObject._id] = refObject;
+      autoDisposeIfNeeded(refObject);
+      return refObject._instance as T;
     }
 
-    autoDisposeIfNeeded(this);
+    final refObject = _createRefObject(context);
 
-    _init(context);
+    autoDisposeIfNeeded(refObject);
 
-    element._cache[_id] = this;
+    element._cache[refObject._id] = refObject;
 
-    return _instance as T;
+    return refObject._instance;
   }
 
   /// Returns the instance of [T] in the current scope without disposing it
@@ -138,7 +131,7 @@ class ScopedRef<T> {
   /// When used with a [LiteRefScope] overrides, any child widget that accesses
   /// the instance will use the new [create] function.
   ///
-  /// Set [autoDispose] to `false` if you're overridding with an existing
+  /// Set [autoDispose] to `false` if you're overriding with an existing
   /// instance and you don't want the instance to be disposed
   /// when all the widgets that have access to it are unmounted.
   ///```dart
@@ -156,28 +149,6 @@ class ScopedRef<T> {
       dispose: autoDispose ? _onDispose : null,
       autoDispose: autoDispose,
     );
-  }
-
-  ScopedRef<T> _copy() {
-    return ScopedRef._(
-      _create,
-      _id,
-      dispose: _onDispose,
-      autoDispose: autoDispose,
-    ).._instance = _instance;
-  }
-
-  void _dispose() {
-    if (_instance == null) return;
-    _onDispose?.call(_instance as T);
-    if (autoDispose && _onDispose == null) {
-      if (_instance case final Disposable d) {
-        d.dispose();
-      } else if (_instance case final ChangeNotifier c) {
-        // covers ChangeNotifier and ValueNotifier
-        c.dispose();
-      }
-    }
   }
 
   @override

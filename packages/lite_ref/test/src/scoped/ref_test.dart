@@ -895,6 +895,65 @@ void main() {
       expect(find.text('true'), findsOneWidget);
     },
   );
+
+  testWidgets('should dispose correct ref when scope has UniqueKey',
+      (tester) async {
+    final disposed = <int>[];
+    final countRef = Ref.scoped(
+      (ctx) => 1,
+      dispose: disposed.add,
+    );
+
+    final inc = ValueNotifier(1);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LiteRefScope(
+          child: ListenableBuilder(
+            listenable: inc,
+            builder: (context, _) {
+              return Container(
+                key: UniqueKey(),
+                child: LiteRefScope(
+                  overrides: {
+                    countRef.overrideWith((ctx) => 1 + inc.value),
+                  },
+                  child: Builder(
+                    builder: (context) {
+                      final val = countRef(context);
+                      return Text('$val');
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('2'), findsOneWidget);
+
+    expect(disposed, isEmpty);
+
+    inc.value = 2;
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('3'), findsOneWidget);
+
+    expect(disposed, [2]);
+
+    inc.value = 3;
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('4'), findsOneWidget);
+
+    expect(disposed, [2, 3]);
+  });
 }
 
 class _Resource implements Disposable {

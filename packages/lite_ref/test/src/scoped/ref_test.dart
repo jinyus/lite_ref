@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lite_ref/lite_ref.dart';
 
 void main() {
-  test('overridden instance should be equal to main', () {
+  test('overriden instance should be equal to main', () {
     final countRef = Ref.scoped((ctx) => 1);
     final countRefClone = countRef.overrideWith((ctx) => 2);
 
@@ -60,8 +60,7 @@ void main() {
     },
   );
 
-  testWidgets('overridden instance should have different value',
-      (tester) async {
+  testWidgets('overriden instance should have different value', (tester) async {
     final countRef = Ref.scoped((ctx) => 1);
     var val = 0;
 

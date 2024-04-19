@@ -158,6 +158,15 @@ class ScopedRef<T> {
     );
   }
 
+  ScopedRef<T> _copy() {
+    return ScopedRef._(
+      _create,
+      _id,
+      dispose: _onDispose,
+      autoDispose: autoDispose,
+    ).._instance = _instance;
+  }
+
   void _dispose() {
     if (_instance == null) return;
     _onDispose?.call(_instance as T);

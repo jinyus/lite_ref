@@ -1,3 +1,38 @@
+## 0.8.0
+
+-   [Fix] Fixed bug with hot-reloading
+-   [Feat] Add `Ref.scopedFamily` which takes a argument to create a unique instance for each key.
+
+    -   Create a `ScopedFamilyRef`.
+
+        ```dart
+        final postControllerRef = Ref.scopedFamily((ctx, String key) {
+        return PostController(key)..fetch();
+        });
+        ```
+
+    -   Access the instance in the current scope:
+
+        This can be done in a widget by using `postController.of(context, key)` or `postController(context, key)`.
+
+        ```dart
+        class PostsPage extends StatelessWidget {
+        const PostsPage({required this.keys, super.key});
+
+        final List<String> keys;
+
+        @override
+        Widget build(BuildContext context) {
+            return ListView.builder(
+            itemBuilder: (context, index) {
+                final post = postControllerRef.of(context, keys[index]);
+                return Text(post?.title ?? 'Loading...');
+            },
+            );
+        }
+        }
+        ```
+
 ## 0.7.0
 
 -   [Fix] Fixed bug where refs were disposed when the child is temporarily deactivated.

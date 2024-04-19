@@ -68,11 +68,44 @@ A `ScopedRef` is a reference that needs a build context to access its instance. 
 
     ```dart
     LiteRefScope(
-        overrides: {
-            settingsServiceRef.overrideWith((ctx) => MockSettingsService()),
-        }
-        child: MyApp(),
-        ),
+      overrides: {
+        settingsServiceRef.overrideWith((ctx) => MockSettingsService()),
+      },
+      child: MyApp(),
+    ),
+    ```
+
+A `ScopedFamilyRef` is used when you need to create a unique instance for different keys.
+This is useful for creating multiple instances of the same class with different configurations.
+
+-   Create a `ScopedFamilyRef`.
+
+    ```dart
+    final postControllerRef = Ref.scopedFamily((ctx, String key) {
+      return PostController(key)..fetch();
+    });
+    ```
+
+-   Access the instance in the current scope:
+
+    This can be done in a widget by using `postController.of(context, key)` or `postController(context, key)`.
+
+    ```dart
+    class PostsPage extends StatelessWidget {
+      const PostsPage({required this.keys, super.key});
+
+      final List<String> keys;
+
+      @override
+      Widget build(BuildContext context) {
+        return ListView.builder(
+          itemBuilder: (context, index) {
+            final post = postControllerRef.of(context, keys[index]);
+            return Text(post?.title ?? 'Loading...');
+          },
+        );
+      }
+    }
     ```
 
 ### Disposal

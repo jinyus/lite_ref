@@ -119,7 +119,7 @@ class CounterCard extends StatelessWidget {
                       counters.value.where((e) => e != id).toList();
                 },
               ),
-            )
+            ),
           ],
         ),
       ),

@@ -97,6 +97,8 @@ class _RefScopeElement extends InheritedElement {
 
   late final _autoDisposeBindings = <Element, Set<ScopedObject<dynamic>>>{};
 
+  late final _oldRefs = <ScopedObject<dynamic>>[];
+
   void _addAutoDisposeBinding(Element element, ScopedObject<dynamic> ref) {
     final existing = _autoDisposeBindings[element];
 
@@ -118,6 +120,24 @@ class _RefScopeElement extends InheritedElement {
         as _RefScopeElement?;
     super.mount(parent, newSlot);
   }
+
+  @override
+  void deactivate() {
+    // if this widget gets replaced by another LiteRefScope
+    // (eg: hot-reload when it or one of its ancestors has a UniqueKey).
+    // We need to store a copy of all Refs in our cache so we don't dispose
+    // refs being used by its replacement.
+    _oldRefs.addAll(_cache.values.map((e) => e._copy()));
+    super.deactivate();
+  }
+
+// coverage:ignore-start
+  @override
+  void activate() {
+    super.activate();
+    _oldRefs.clear();
+  }
+// coverage:ignore-end
 
   @override
   void removeDependent(Element dependent) {
@@ -146,10 +166,16 @@ class _RefScopeElement extends InheritedElement {
 
   @override
   void unmount() {
-    for (final ref in _cache.values) {
+    // this shouldn't be necessary but it's harmless
+    // we should be able to just use _oldRefs.
+    final toBeDisposed = _oldRefs.isEmpty ? _cache.values : _oldRefs;
+
+    for (final ref in toBeDisposed) {
       ref._dispose();
     }
+
     _cache.clear();
+    _oldRefs.clear();
     scope.overrides?.clear();
     _autoDisposeBindings.clear();
     _parent = null;

@@ -28,9 +28,6 @@ class ScopedObject<T> {
 
   int _watchCount = 0;
 
-  /// The number of widgets that are currently watching this instance.
-  int get watchCount => _watchCount;
-
   void _dispose() {
     if (_instance == null) return;
     _onDispose?.call(_instance);

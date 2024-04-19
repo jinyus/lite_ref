@@ -13,7 +13,7 @@ extension PumpApp on WidgetTester {
     return pumpWidget(
       LiteRefScope(
         overrides: {
-          countControllerRef.overrideWith((_) => controller),
+          countControllerRef.overrideWith((_, __) => controller),
         },
         child: const MyApp(),
       ),
@@ -22,7 +22,13 @@ extension PumpApp on WidgetTester {
 }
 
 void main() {
-  final controller = MockCounterController();
+  late final MockCounterController controller;
+
+  setUpAll(() {
+    registerFallbackValue(Beacon.writable(0));
+    controller = MockCounterController();
+    when(() => controller.name).thenReturn('counter 0');
+  });
 
   testWidgets('renders current count', (tester) async {
     final beacon = Beacon.writable(42);

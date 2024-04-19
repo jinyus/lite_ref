@@ -4,7 +4,7 @@ import 'package:state_beacon/state_beacon.dart';
 
 void main() {
   test('emits [1] when incremented', () {
-    final controller = Controller();
+    final controller = Controller(id: 0);
 
     expect(controller.count.value, 0);
 
@@ -16,7 +16,7 @@ void main() {
   });
 
   test('emits [-1] when decremented', () {
-    final controller = Controller();
+    final controller = Controller(id: 0);
 
     expect(controller.count.value, 0);
 

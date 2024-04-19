@@ -28,7 +28,12 @@ class ScopedObject<T> {
   int _watchCount = 0;
 
   ScopedObject<T> _copy() {
-    return ScopedObject(id: _id, instance: _instance);
+    return ScopedObject(
+      id: _id,
+      instance: _instance,
+      autoDispose: autoDispose,
+      dispose: _onDispose,
+    );
   }
 
   void _dispose() {

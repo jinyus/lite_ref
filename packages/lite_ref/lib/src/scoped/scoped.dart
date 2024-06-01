@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:basic_interfaces/basic_interfaces.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
@@ -8,3 +10,4 @@ part 'scope_widget.dart';
 part 'scoped_family_ref.dart';
 part 'scoped_ref.dart';
 part 'scoped_object.dart';
+part 'async_scoped_ref.dart';

@@ -952,6 +952,216 @@ void main() {
     expect(disposed, [2, 3]);
   });
 
+  group('Scoped async', () {
+    test('overridden instance should be equal to main', () {
+      final asyncRef = Ref.scopedAsync((context) async => 1);
+      final asyncRefClone = asyncRef.overrideWith((context) async => 2);
+
+      expect(asyncRef, asyncRefClone);
+
+      final hashSet = <Object>{}..add(asyncRef);
+
+      expect(hashSet.contains(asyncRefClone), true);
+    });
+
+    testWidgets('should cache values', (tester) async {
+      var ran = 0;
+      final asyncRef = Ref.scopedAsync((context) async => ++ran);
+
+      const firstWidgetKey = Key('first widget');
+      const secondWidgetKey = Key('second widget');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                return Column(
+                  children: [
+                    FutureBuilder(
+                      future: asyncRef(context),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          final val = snapshot.data;
+                          expect(val, 1);
+                          return Text('$val', key: firstWidgetKey);
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                    FutureBuilder(
+                      future: asyncRef(context),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          final val = snapshot.data;
+                          expect(val, 1);
+                          return Text('$val', key: secondWidgetKey);
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(ran, 1);
+
+      // The widgets are not built yet
+      final first = find.byKey(firstWidgetKey);
+      final second = find.byKey(secondWidgetKey);
+      expect(first, findsNothing);
+      expect(second, findsNothing);
+
+      await tester.pumpAndSettle();
+
+      // The widgets are built
+      expect(first, findsOneWidget);
+      expect(second, findsOneWidget);
+
+      // The widgets have the correct value
+      final firstData = tester.widget<Text>(first).data;
+      final secondData = tester.widget<Text>(second).data;
+      expect(firstData, '1');
+      expect(secondData, '1');
+    });
+
+    testWidgets(
+      'should throw when there is no root LiteRefScope',
+      (tester) async {
+        final countRef = Ref.scopedAsync((context) async => 1);
+        Object? error;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                return FutureBuilder(
+                  future: countRef.of(context),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      error = snapshot.error;
+                      return const SizedBox.shrink();
+                    }
+                    return const SizedBox.shrink();
+                  },
+                );
+              },
+            ),
+          ),
+        );
+        // FutureBuilder loads the future in the next frame
+        expect(error, isNull);
+
+        await tester.pumpAndSettle();
+
+        // This should trigger the error
+        expect(error, isA<AssertionError>());
+      },
+    );
+
+    testWidgets('overridden instance should have different value',
+        (tester) async {
+      final countRef = Ref.scopedAsync((ctx) async => 1);
+      var val2 = 0;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                return FutureBuilder(
+                  future: countRef.of(context),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      final val1 = snapshot.requireData;
+                      expect(val1, 1);
+                      return LiteRefScope(
+                        overrides: {
+                          countRef.overrideWith((ctx) async => 2),
+                        },
+                        child: Builder(
+                          builder: (context) {
+                            return FutureBuilder(
+                              future: countRef.of(context),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.done) {
+                                  val2 = snapshot.requireData;
+                                  expect(val2, 2);
+                                  return Text('$val1 $val2');
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            );
+                          },
+                        ),
+                      );
+                    } else {
+                      return const SizedBox.shrink();
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 2'), findsOneWidget);
+    });
+
+    testWidgets('should be able to use other refs', (tester) async {
+      final nameRef = Ref.scoped((context) => 'John');
+      final ageRef = Ref.scopedAsync((context) async => 20);
+
+      final bioRef = Ref.scopedAsync(
+            (ctx) async {
+              final name = nameRef(ctx);
+              final age = await ageRef(ctx);
+              return '$name is $age years old';
+            },
+      );
+
+      const correctText = 'John is 20 years old';
+      const textKey = Key('text');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                return FutureBuilder(
+                  future: bioRef.of(context),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      final val = snapshot.requireData;
+                      expect(val, correctText);
+                      return Text(val, key: textKey);
+                    }
+                    return const SizedBox.shrink();
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      final finder = find.byKey(textKey);
+
+      expect(finder, findsNothing);
+
+      await tester.pumpAndSettle();
+
+      expect(finder, findsOneWidget);
+      expect(find.text(correctText), findsOneWidget);
+    });
+  });
+
   group('ScopedFamilyRef', () {
     test('overridden instance should be equal to main', () {
       final countRef = Ref.scopedFamily((ctx, int a) => 1);

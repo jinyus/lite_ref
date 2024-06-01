@@ -66,6 +66,14 @@ abstract class Ref {
     return ScopedRef<T>(create, dispose: dispose, autoDispose: autoDispose);
   }
 
+  static ScopedAsyncRef<T> scopedAsync<T>(
+    CtxCreateAsyncFn<T> create, {
+    DisposeFn<T>? dispose,
+    bool autoDispose = true,
+  }) {
+    return ScopedAsyncRef<T>(create, dispose: dispose, autoDispose: autoDispose);
+  }
+
   /// Creates a new [ScopedFamilyRef] which requires a context and family value
   /// to access the instance.
   /// The family value must be immutable and implement `==` and `hashCode`.

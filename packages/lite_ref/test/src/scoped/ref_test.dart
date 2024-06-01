@@ -1120,11 +1120,11 @@ void main() {
       final ageRef = Ref.scopedAsync((context) async => 20);
 
       final bioRef = Ref.scopedAsync(
-            (ctx) async {
-              final name = nameRef(ctx);
-              final age = await ageRef(ctx);
-              return '$name is $age years old';
-            },
+        (ctx) async {
+          final name = nameRef(ctx);
+          final age = await ageRef(ctx);
+          return '$name is $age years old';
+        },
       );
 
       const correctText = 'John is 20 years old';
@@ -1159,6 +1159,952 @@ void main() {
 
       expect(finder, findsOneWidget);
       expect(find.text(correctText), findsOneWidget);
+    });
+
+    testWidgets(
+      'assertOf should return created instance',
+      (tester) async {
+        final countRef = Ref.scopedAsync((ctx) async => 1);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LiteRefScope(
+              child: Builder(
+                builder: (context) {
+                  return FutureBuilder(
+                    future: countRef.of(context),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        final i = countRef.assertOf(context);
+                        return Text('$i');
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('1'), findsOneWidget);
+      },
+    );
+
+    testWidgets('should dispose ref when scope is unmounted', (tester) async {
+      final disposed = <int>[];
+      final countRef = Ref.scopedAsync(
+        (context) async => 1,
+        dispose: disposed.add,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                return FutureBuilder(
+                  future: countRef(context),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      final val = snapshot.requireData;
+                      expect(val, 1);
+                      return LiteRefScope(
+                        overrides: {
+                          countRef.overrideWith((ctx) async => 2),
+                        },
+                        child: Builder(
+                          builder: (context) {
+                            return FutureBuilder(
+                              future: countRef(context),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.done) {
+                                  final val = snapshot.requireData;
+                                  expect(val, 2);
+                                  return Text('$val');
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            );
+                          },
+                        ),
+                      );
+                    } else {
+                      return const SizedBox.shrink();
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('2'), findsOneWidget);
+
+      expect(disposed, isEmpty);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                return FutureBuilder(
+                  future: countRef(context),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      final val = snapshot.requireData;
+                      expect(val, 1);
+                      return Text('$val');
+                    }
+                    return const SizedBox.shrink();
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('1'), findsOneWidget);
+      expect(disposed, [2]); // overridden instance should be disposed
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Text(''),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(disposed, [2, 1]);
+    });
+
+    testWidgets(
+        'should dispose ref when scope is unmounted when autodispose=false',
+        (tester) async {
+      final disposed = <int>[];
+      final countRef = Ref.scopedAsync(
+        (context) async => 1,
+        dispose: disposed.add,
+        autoDispose: false,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                return FutureBuilder(
+                  future: countRef(context),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      final val = snapshot.requireData;
+                      expect(val, 1);
+                      return LiteRefScope(
+                        overrides: {
+                          countRef.overrideWith((ctx) async => 2),
+                        },
+                        child: Builder(
+                          builder: (context) {
+                            return FutureBuilder(
+                              future: countRef(context),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.done) {
+                                  final val = snapshot.requireData;
+                                  expect(val, 2);
+                                  return Text('$val');
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            );
+                          },
+                        ),
+                      );
+                    } else {
+                      return const SizedBox.shrink();
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('2'), findsOneWidget);
+
+      expect(disposed, isEmpty);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                return FutureBuilder(
+                  future: countRef(context),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      final val = snapshot.requireData;
+                      expect(val, 1);
+                      return Text('$val');
+                    }
+                    return const SizedBox.shrink();
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('1'), findsOneWidget);
+      expect(disposed, [2]); // overridden instance should be disposed
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Text(''),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(disposed, [2, 1]);
+    });
+
+    testWidgets('should dispose when only child is unmounted', (tester) async {
+      final disposed = <int>[];
+      final countRef =
+          Ref.scopedAsync((context) async => 1, dispose: disposed.add);
+      final show = ValueNotifier(true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: ListenableBuilder(
+              listenable: show,
+              builder: (context, snapshot) {
+                if (!show.value) return const Text('hidden');
+                return Builder(
+                  builder: (context) {
+                    return FutureBuilder(
+                      future: countRef(context),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          final val = snapshot.requireData;
+                          expect(val, 1);
+                          return Text('$val');
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('1'), findsOneWidget);
+
+      expect(disposed, isEmpty);
+
+      show.value = false;
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('hidden'), findsOneWidget);
+
+      expect(disposed, [1]);
+    });
+
+    testWidgets('should dispose when all children are unmounted',
+        (tester) async {
+      final disposed = <int>[];
+      final countRef = Ref.scopedAsync((ctx) async => 1, dispose: disposed.add);
+      final amount = ValueNotifier(3);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: ListenableBuilder(
+              listenable: amount,
+              builder: (context, snapshot) {
+                return Column(
+                  children: [
+                    const SizedBox.shrink(),
+                    for (var i = 0; i < amount.value; i++)
+                      Builder(
+                        builder: (context) {
+                          return FutureBuilder(
+                            future: countRef(context),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.done) {
+                                final val = snapshot.requireData;
+                                expect(val, 1);
+                                return Text('$val');
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          );
+                        },
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('1'), findsExactly(amount.value));
+
+      expect(disposed, isEmpty);
+
+      amount.value = 2;
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('1'), findsExactly(amount.value));
+
+      expect(disposed, isEmpty); // still has listeners
+
+      amount.value = 0;
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('1'), findsNothing);
+
+      expect(disposed, [1]); // dispose when all children are unmounted
+    });
+
+    testWidgets(
+      'should dispose Disposable when no dispose function is supplied',
+      (tester) async {
+        final resource = _Resource();
+        final countRef = Ref.scopedAsync((context) async => resource);
+        final show = ValueNotifier(true);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LiteRefScope(
+              child: ListenableBuilder(
+                listenable: show,
+                builder: (context, snapshot) {
+                  if (!show.value) return const Text('hidden');
+                  return Builder(
+                    builder: (context) {
+                      return FutureBuilder(
+                        future: countRef(context),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.done) {
+                            final val = snapshot.requireData;
+                            expect(val.disposed, false);
+                            return Text('${val.disposed}');
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        expect(find.text('false'), findsOneWidget);
+
+        expect(resource.disposed, false);
+
+        show.value = false;
+
+        await tester.pumpAndSettle();
+
+        expect(find.text('hidden'), findsOneWidget);
+
+        expect(resource.disposed, true);
+      },
+    );
+
+    testWidgets(
+      'should dispose ValueNotifier when no dispose function is supplied',
+      (tester) async {
+        final vn = ValueNotifier(1);
+        final countRef = Ref.scopedAsync((context) async => vn);
+        final show = ValueNotifier(true);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LiteRefScope(
+              child: ListenableBuilder(
+                listenable: show,
+                builder: (context, snapshot) {
+                  if (!show.value) return const Text('hidden');
+                  return Builder(
+                    builder: (context) {
+                      return FutureBuilder(
+                        future: countRef(context),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.done) {
+                            final val = snapshot.requireData;
+                            return Text('${val.value}');
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        expect(find.text('1'), findsOneWidget);
+
+        vn.addListener(() {}); // not disposed. ie: should not throw
+
+        show.value = false;
+
+        await tester.pumpAndSettle();
+
+        expect(find.text('hidden'), findsOneWidget);
+
+        // should throw when disposed
+        expect(() => vn.addListener(() {}), throwsFlutterError);
+      },
+    );
+
+    testWidgets(
+      'should dispose correct instance when overridden',
+      (tester) async {
+        final resource = _Resource();
+        final resource2 = _Resource();
+        final countRef = Ref.scopedAsync((context) async => resource);
+        final countRef2 = countRef.overrideWith((_) async => resource2);
+        final show = ValueNotifier(true);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LiteRefScope(
+              child: ListenableBuilder(
+                listenable: show,
+                builder: (context, snapshot) {
+                  return LiteRefScope(
+                    overrides: {countRef2},
+                    child: !show.value
+                        ? const Text('hidden')
+                        : Column(
+                            children: [
+                              Builder(
+                                builder: (context) {
+                                  return FutureBuilder(
+                                    future: countRef(context),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.done) {
+                                        final val = snapshot.requireData;
+                                        return Text('${val.disposed}');
+                                      }
+                                      return const SizedBox.shrink();
+                                    },
+                                  );
+                                },
+                              ),
+                              Builder(
+                                builder: (context) {
+                                  return FutureBuilder(
+                                    future: countRef(context),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.done) {
+                                        final val = snapshot.requireData;
+                                        return Text('${val.disposed}');
+                                      }
+                                      return const SizedBox.shrink();
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        expect(find.text('false'), findsExactly(2));
+
+        expect(resource.disposed, false);
+        expect(resource2.disposed, false);
+
+        show.value = false;
+
+        await tester.pumpAndSettle();
+
+        expect(find.text('hidden'), findsOneWidget);
+
+        expect(resource.disposed, false);
+        expect(resource2.disposed, true);
+      },
+    );
+
+    testWidgets(
+      'should get correct value when GlobalKey changes '
+      'causes it to move its position in the tree',
+      (tester) async {
+        final current = ValueNotifier(1);
+        final countRef = Ref.scopedAsync((context) async => 0);
+
+        final child = Builder(
+          key: GlobalKey(),
+          builder: (context) {
+            return FutureBuilder(
+              future: countRef(context),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  final val = snapshot.requireData;
+                  return Text('got: $val');
+                }
+                return const SizedBox.shrink();
+              },
+            );
+          },
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LiteRefScope(
+              child: Column(
+                children: [
+                  ListenableBuilder(
+                    listenable: current,
+                    builder: (context, snapshot) {
+                      if (current.value != 1) {
+                        return const SizedBox.shrink();
+                      }
+                      return LiteRefScope(
+                        overrides: {
+                          countRef.overrideWith((_) async => 1),
+                        },
+                        child: Builder(
+                          builder: (context) => child,
+                        ),
+                      );
+                    },
+                  ),
+                  ListenableBuilder(
+                    listenable: current,
+                    builder: (context, snapshot) {
+                      if (current.value != 2) {
+                        return const SizedBox.shrink();
+                      }
+                      return LiteRefScope(
+                        overrides: {
+                          countRef.overrideWith((_) async => 2),
+                        },
+                        child: Builder(
+                          builder: (context) => child,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+        expect(find.text('got: 1'), findsOneWidget);
+        current.value = 2;
+        await tester.pumpAndSettle();
+        expect(find.text('got: 2'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'should return true if the ScopedAsyncRef is '
+      'initialized in the current LiteRefScope',
+      (tester) async {
+        final countRef = Ref.scopedAsync((context) async => 1);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LiteRefScope(
+              child: Builder(
+                builder: (context) {
+                  final initialized = countRef.exists(context);
+                  expect(initialized, false);
+                  return FutureBuilder(
+                    future: countRef(context),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        final initialized = countRef.exists(context);
+                        expect(initialized, true);
+                        final val = countRef.assertOf(context);
+                        expect(val, 1);
+                        return LiteRefScope(
+                          overrides: {
+                            countRef.overrideWith((context) async => 2),
+                          },
+                          child: Builder(
+                            builder: (context) {
+                              final initialized = countRef.exists(context);
+                              expect(initialized, false);
+
+                              return FutureBuilder(
+                                future: countRef(context),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.done) {
+                                    final initialized =
+                                        countRef.exists(context);
+                                    expect(initialized, true);
+                                    final val = snapshot.requireData;
+                                    expect(val, 2);
+                                    return Text('$val');
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              );
+                            },
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        expect(find.text('2'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'should dispose when all children are unmounted and it is read in parent',
+      (tester) async {
+        final disposed = <int>[];
+        final countRef = Ref.scopedAsync(
+          (context) async => 1,
+          dispose: disposed.add,
+        );
+        final amount = ValueNotifier(3);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LiteRefScope(
+              child: Column(
+                children: [
+                  Builder(
+                    builder: (context) {
+                      return FutureBuilder(
+                        future: countRef.read(context),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.done) {
+                            final val = snapshot.requireData;
+                            return Text('read $val');
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      );
+                    },
+                  ),
+                  ListenableBuilder(
+                    listenable: amount,
+                    builder: (context, snapshot) {
+                      return Column(
+                        children: [
+                          const SizedBox.shrink(),
+                          for (var i = 0; i < amount.value; i++)
+                            Builder(
+                              builder: (context) {
+                                return FutureBuilder(
+                                  future: countRef(context),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.done) {
+                                      final val = snapshot.requireData;
+                                      expect(val, 1);
+                                      return Text('$val');
+                                    }
+                                    return const SizedBox.shrink();
+                                  },
+                                );
+                              },
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        expect(find.text('1'), findsExactly(amount.value));
+        expect(find.text('read 1'), findsOneWidget);
+
+        expect(disposed, isEmpty);
+
+        amount.value = 2;
+
+        await tester.pumpAndSettle();
+
+        expect(find.text('1'), findsExactly(amount.value));
+
+        expect(disposed, isEmpty); // still has listeners
+
+        amount.value = 0;
+
+        await tester.pumpAndSettle();
+
+        expect(find.text('1'), findsNothing);
+
+        expect(disposed, [1]); // dispose when all children are unmounted
+        expect(find.text('read 1'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'should NOT dispose when scope is unmounted and only access was a "read"',
+      (tester) async {
+        final disposed = <int>[];
+        final countRef = Ref.scopedAsync(
+          (context) async => 1,
+          dispose: disposed.add,
+        );
+
+        final show = ValueNotifier(true);
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LiteRefScope(
+              child: ValueListenableBuilder(
+                valueListenable: show,
+                builder: (__, value, _) {
+                  if (!value) return const SizedBox.shrink();
+                  return Builder(
+                    builder: (context) {
+                      return FutureBuilder(
+                        future: countRef.read(context),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.done) {
+                            final val = snapshot.requireData;
+                            expect(val, 1);
+                            return Text('$val');
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        expect(find.text('1'), findsOneWidget);
+        expect(disposed, isEmpty); // overridden instance should be disposed
+
+        show.value = false;
+
+        await tester.pumpAndSettle();
+
+        expect(disposed, isEmpty);
+      },
+    );
+
+    testWidgets(
+      'should throw when the scope is marked as onlyOverrides',
+      (tester) async {
+        final countRef = Ref.scopedAsync((context) async => 1);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LiteRefScope(
+              onlyOverrides: true,
+              child: Builder(
+                builder: (context) {
+                  return FutureBuilder(
+                    future: countRef(context),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        final val = snapshot.error;
+                        expect(val, isA<Exception>());
+                        return const Text('1');
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('1'), findsOneWidget);
+      },
+    );
+
+    testWidgets('should fetch from the closest scope', (tester) async {
+      final resourceRef = Ref.scopedAsync((context) async => _Resource());
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: Builder(
+              builder: (context) {
+                return FutureBuilder(
+                  future: resourceRef(context),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      final val = snapshot.requireData;
+                      expect(val.disposed, false);
+                      val.disposed = true;
+                      return LiteRefScope(
+                        onlyOverrides: true,
+                        overrides: {
+                          resourceRef.overrideWith((ctx) async => _Resource()),
+                        },
+                        child: Builder(
+                          builder: (context) {
+                            return FutureBuilder(
+                              future: resourceRef(context),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.done) {
+                                  final val2 = snapshot.requireData;
+                                  expect(val2.disposed, false);
+                                  return Text('${val2.disposed}');
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            );
+                          },
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      expect(find.text('false'), findsOneWidget);
+    });
+
+    testWidgets('should dispose correct ref when scope has UniqueKey',
+        (tester) async {
+      final disposed = <int>[];
+      final countRef = Ref.scopedAsync(
+        (context) async => 1,
+        dispose: disposed.add,
+      );
+
+      final inc = ValueNotifier(1);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiteRefScope(
+            child: ListenableBuilder(
+              listenable: inc,
+              builder: (context, _) {
+                return Container(
+                  key: UniqueKey(),
+                  child: LiteRefScope(
+                    overrides: {
+                      countRef.overrideWith((context) async => 1 + inc.value),
+                    },
+                    child: Builder(
+                      builder: (context) {
+                        return FutureBuilder(
+                          future: countRef(context),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.done) {
+                              final val = snapshot.requireData;
+                              return Text('$val');
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('2'), findsOneWidget);
+
+      expect(disposed, isEmpty);
+
+      inc.value = 2;
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('3'), findsOneWidget);
+
+      expect(disposed, [2]);
+
+      inc.value = 3;
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('4'), findsOneWidget);
+
+      expect(disposed, [2, 3]);
     });
   });
 

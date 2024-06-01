@@ -1,6 +1,16 @@
+// ignore_for_file: avoid_equals_and_hash_code_on_mutable_classes
+
 part of 'scoped.dart';
 
+/// Used for creating and retrieving an asynchronously created object.
 class ScopedAsyncRef<T> implements IScopedRef<T> {
+
+  /// Creates a new [ScopedAsyncRef] which always return a new instance.
+  /// If [autoDispose] is set to `true`, the instance will be disposed when
+  /// all the widgets that have access to the instance are unmounted.
+  ///
+  /// A [dispose] function does not have to be provided if [T] implements
+  /// [Disposable].
   ScopedAsyncRef(
     CtxCreateAsyncFn<T> create, {
     DisposeFn<T>? dispose,
@@ -20,6 +30,8 @@ class ScopedAsyncRef<T> implements IScopedRef<T> {
 
   final Object _id;
 
+  /// Whether the instance should be disposed when all the widgets that have
+  /// access to the instance are unmounted.
   @override
   final bool autoDispose;
 
@@ -49,6 +61,8 @@ class ScopedAsyncRef<T> implements IScopedRef<T> {
     return result;
   }
 
+  /// Returns `true` if this [ScopedAsyncRef] is initialized
+  /// in the current [LiteRefScope].
   bool exists(BuildContext context) {
     assert(
       context is Element,
@@ -60,6 +74,10 @@ class ScopedAsyncRef<T> implements IScopedRef<T> {
     return element._cache.containsKey(_id);
   }
 
+  /// Returns the Future of [T] in the current scope.
+  ///
+  /// If [listen] is `false`, the instance will not be disposed when the widget
+  /// is unmounted.
   Future<T> of(BuildContext context, {bool listen = true}) async {
     assert(
       context is Element,
@@ -100,12 +118,65 @@ class ScopedAsyncRef<T> implements IScopedRef<T> {
     return refObject._instance;
   }
 
+  /// Returns the instance of [T] in the current scope.
+  ///
+  /// If [listen] is `false`, the instance will not be disposed when the widget
+  /// is unmounted.
+  T assertOf(BuildContext context, {bool listen = true}) {
+    assert(
+    context is Element,
+    'This must be called with the context of a Widget.',
+    );
+
+    final element = LiteRefScope._of(context, this);
+
+    final existing = element._cache[_id];
+
+    void autoDisposeIfNeeded(ScopedObject<dynamic> ref) {
+      if (autoDispose && listen) {
+        element._addAutoDisposeBinding(context as Element, ref);
+      }
+    }
+
+    if (existing != null) {
+      autoDisposeIfNeeded(existing);
+      return existing._instance as T;
+    }
+    throw StateError(
+      'The instance has not been created yet. '
+          'You must call `instance` first and await it.',
+    );
+  }
+
+  /// Returns the Future of [T] in the current scope without disposing it
+  /// when the widget is unmounted. This should be used in callbacks like
+  /// `onPressed` or `onTap`.
+  ///
+  /// Alias for `of(context, listen: false)`.
   Future<T> read(BuildContext context) {
     return of(context, listen: false);
   }
 
+  /// Returns the instance of [T] in the current scope without disposing it
+  /// when the widget is unmounted. This should be used in callbacks like
+  /// `onPressed` or `onTap`.
+  ///
+  /// Alias for `of(context, listen: false)`.
+  T readAssert(BuildContext context) {
+    return assertOf(context, listen: false);
+  }
+
+  /// Returns the Future of [T] in the current scope without disposing it
+  /// when the widget is unmounted. This should be used in callbacks like
   Future<T> call(BuildContext context) => of(context);
 
+  /// Returns a new ScopedAsyncRef with a different [create] function.
+  /// When used with a [LiteRefScope] overrides, any child widget that accesses
+  /// the instance will use the new [create] function.
+  ///
+  /// Set [autoDispose] to `false` if you're overriding with an existing
+  /// instance and you don't want the instance to be disposed
+  /// when all the widgets that have access to it are unmounted.
   ScopedAsyncRef<T> overrideWith(
     CtxCreateAsyncFn<T> create, {
     bool autoDispose = true,

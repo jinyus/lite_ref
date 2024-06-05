@@ -11,7 +11,7 @@ class SettingsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = settingsControllerRef(context);
+    final controller = settingsControllerRef.assertOf(context);
 
     return Scaffold(
       appBar: MyAppBar(context, title: 'Settings'),

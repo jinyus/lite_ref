@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_example/deps.dart';
+import 'package:flutter_example/error_app.dart';
+import 'package:flutter_example/loading_app.dart';
 import 'package:flutter_example/settings/view.dart';
 import 'package:lite_ref/lite_ref.dart';
 
@@ -7,41 +9,92 @@ void main(List<String> args) {
   runApp(const LiteRefScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+enum AppLoaderState {
+  loading,
+  loaded,
+  error;
+
+  bool get isLoaded => this == AppLoaderState.loaded;
+
+  bool get isLoading => this == AppLoaderState.loading;
+
+  bool get hasError => this == AppLoaderState.error;
+}
+
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final controller = settingsControllerRef(context);
-    return FutureBuilder(
-      future: controller.loadSettings(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(
-            child: Text('Initialization failed:\n${snapshot.error}'),
-          );
-        } else if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  Future<void>? _appLoader;
+  AppLoaderState _loadingState = AppLoaderState.loading;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _appLoader ??= _loadApp(context).then((value) {
+      if (mounted) {
+        setState(() {
+          _loadingState = AppLoaderState.loaded;
+        });
+      }
+    }).catchError(
+      (error, stackTrace) {
+        if (mounted) {
+          setState(() {
+            _loadingState = AppLoaderState.error;
+          });
         }
-        return ListenableBuilder(
-          listenable: controller,
-          builder: (context, _) {
-            return MaterialApp(
-              theme: ThemeData(),
-              darkTheme: ThemeData.dark(),
-              themeMode: controller.themeMode,
-              onGenerateRoute: (RouteSettings routeSettings) {
-                return MaterialPageRoute<void>(
-                  settings: routeSettings,
-                  builder: (BuildContext context) {
-                    switch (routeSettings.name) {
-                      case SettingsView.routeName:
-                        return const SettingsView();
-                      default:
-                        return const HomePage();
-                    }
-                  },
-                );
+      },
+    );
+  }
+
+  Future<void> _loadApp(BuildContext context) async {
+    await settingsControllerRef.read(context);
+    await Future<dynamic>.delayed(const Duration(seconds: 2));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (_loadingState) {
+      AppLoaderState.loading => const LoadingApp(),
+      AppLoaderState.loaded => const LoadedApp(),
+      AppLoaderState.error => const ErrorApp(),
+    };
+  }
+}
+
+class LoadedApp extends StatelessWidget {
+  const LoadedApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = settingsControllerRef.assertOf(context);
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, child) {
+        return MaterialApp(
+          theme: ThemeData(),
+          darkTheme: ThemeData.dark(),
+          themeMode: controller.themeMode,
+          onGenerateRoute: (RouteSettings routeSettings) {
+            return MaterialPageRoute<void>(
+              settings: routeSettings,
+              builder: (BuildContext context) {
+                switch (routeSettings.name) {
+                  case SettingsView.routeName:
+                    return const SettingsView();
+                  default:
+                    return const HomePage();
+                }
               },
             );
           },
@@ -96,16 +149,4 @@ class MyAppBar extends AppBar {
             fontSize: 20,
           ),
         );
-
-  // @override
-  // Widget build(BuildContext context) {
-  //   return AppBar(
-  //     title: const Text('LiteRef Example'),
-  //     backgroundColor: Theme.of(context).colorScheme.secondary,
-  //     titleTextStyle: TextStyle(
-  //       color: Theme.of(context).colorScheme.onSecondary,
-  //       fontSize: 20,
-  //     ),
-  //   );
-  // }
 }

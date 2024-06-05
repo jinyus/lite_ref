@@ -66,6 +66,8 @@ abstract class Ref {
     return ScopedRef<T>(create, dispose: dispose, autoDispose: autoDispose);
   }
 
+  /// Creates a new [ScopedAsyncRef] which requires a context to access the instance.
+  /// The instance is created asynchronously.
   static ScopedAsyncRef<T> scopedAsync<T>(
     CtxCreateAsyncFn<T> create, {
     DisposeFn<T>? dispose,

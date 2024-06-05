@@ -35,8 +35,12 @@ void main() {
     await tester.pumpWidget(
       LiteRefScope(
         overrides: {
-          settingsServiceRef.overrideWith((_) => mockSettingsService),
-          settingsControllerRef.overrideWith((_) => mockSettingsController),
+          settingsServiceRef.overrideWith((_) {
+            return mockSettingsService;
+          }),
+          settingsControllerRef.overrideWith((_) async {
+            return mockSettingsController;
+          }),
         },
         child: const MyApp(),
       ),
@@ -46,8 +50,6 @@ void main() {
 
     // Verify that our counter starts at 0.
     expect(find.byType(HomePage), findsOneWidget);
-
-    verify(mockSettingsController.loadSettings).called(1);
 
     final btn = find.byKey(const Key('settings'));
 

@@ -3,6 +3,9 @@ part of 'scoped.dart';
 /// The function used to create an instance of [T].
 typedef CtxCreateFn<T> = T Function(BuildContext context);
 
+/// The function used to create an instance of [T] asynchronously.
+typedef CtxCreateAsyncFn<T> = Future<T> Function(BuildContext context);
+
 /// The function used to create an instance of [T] with a family [F].
 typedef CtxFamilyCreateFn<T, F> = T Function(BuildContext context, F family);
 

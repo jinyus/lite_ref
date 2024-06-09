@@ -108,6 +108,24 @@ This is useful for creating multiple instances of the same class with different 
     }
     ```
 
+A `ScopedAsyncRef` is used when you need to create or initialize an instance asynchronously.
+
+-   Create a `ScopedAsyncRef`.
+
+    ```dart
+    final backendServiceRef = Ref.asyncScoped((ctx) async {
+      final backend = await BackendService();
+      await backend.init();
+      return backend;
+    });
+    ```
+    Access the instance in the current scope:
+
+    This can be done in a widget by using `backendServiceRef.of(context)` or `backendServiceRef(context)`.
+Or you can use `backendServiceRef.assertOf(context)` if you know the instance is already created.
+
+    Also, it can be overridden like other scoped refs.
+
 ### Disposal
 
 When a `ScopedRef` provides a `ChangeNotifier`, `ValueNotifier` or a class that implements `Disposable`, it will automatically dispose the instance when all the widgets that have access to the instance are unmounted.

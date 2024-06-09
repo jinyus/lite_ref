@@ -4,6 +4,11 @@ import 'package:lite_ref/lite_ref.dart';
 
 final settingsServiceRef = Ref.scoped((ctx) => SettingsService());
 
-final settingsControllerRef = Ref.scoped(
-  (ctx) => SettingsController(settingsServiceRef(ctx)),
+final settingsControllerRef = Ref.scopedAsync(
+  (context) async {
+    final controller = SettingsController(settingsServiceRef(context));
+    await controller.loadSettings();
+    return controller;
+  },
+  autoDispose: false,
 );

@@ -157,15 +157,6 @@ class ScopedAsyncRef<T> implements IScopedRef<T> {
     return of(context, listen: false);
   }
 
-  /// Returns the instance of [T] in the current scope without disposing it
-  /// when the widget is unmounted. This should be used in callbacks like
-  /// `onPressed` or `onTap`.
-  ///
-  /// Alias for `of(context, listen: false)`.
-  T readAssert(BuildContext context) {
-    return assertOf(context, listen: false);
-  }
-
   /// Returns the Future of [T] in the current scope without disposing it
   /// when the widget is unmounted. This should be used in callbacks like
   Future<T> call(BuildContext context) => of(context);

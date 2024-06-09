@@ -952,7 +952,7 @@ void main() {
     expect(disposed, [2, 3]);
   });
 
-  group('Scoped async', () {
+  group('ScopedAsync', () {
     test('overridden instance should be equal to main', () {
       final asyncRef = Ref.scopedAsync((context) async => 1);
       final asyncRefClone = asyncRef.overrideWith((context) async => 2);
@@ -1811,6 +1811,33 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('2'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      "Should throw error on assertOf if reference wasn't initialized",
+      (tester) async {
+        final countRef = Ref.scopedAsync(
+          (context) async => 'value',
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LiteRefScope(
+              child: Builder(
+                builder: (context) {
+                  late final val = countRef.assertOf(context);
+                  expect(() => val, throwsStateError);
+                  return const Column(
+                    children: [
+                      Text('test'),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        );
       },
     );
 
